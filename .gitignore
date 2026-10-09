@@ -85,3 +85,7 @@ weflow-web-offical
 patches/
 mmtls/
 .tmp/
+# Pinned binaries are fetched by components:install, not committed.
+/resources/wcdb/
+/resources/wedecrypt/
+/resources/welive/

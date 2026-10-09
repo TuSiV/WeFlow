@@ -22,7 +22,9 @@
     "build": "npm run typecheck && node scripts/clean-dist-electron.cjs && vite build && electron-builder",
     "preview": "vite preview",
     "electron:dev": "node scripts/prepare-electron-runtime.cjs && vite --mode electron",
-    "electron:build": "npm run build"
+    "electron:build": "npm run build",
+    "components:install": "node scripts/install-native-components.cjs",
+    "components:check": "node scripts/install-native-components.cjs --check"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.12",

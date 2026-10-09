@@ -1,0 +1,160 @@
+{
+  "source": {
+    "repository": "Panther114/Weport",
+    "commit": "3b9e2afd341f0eef56d4be9dafca25c8fe8be533"
+  },
+  "files": [
+    {
+      "path": "resources/wcdb/linux/x64/libwcdb_api.so",
+      "gitBlobSha": "0c0629715e20967fa8de9334509971abfad5b4f3",
+      "size": 11831688
+    },
+    {
+      "path": "resources/wcdb/macos/universal/libWCDB.dylib",
+      "gitBlobSha": "75eb2793375ef707aea3d597d130b2d2c572d786",
+      "size": 5102184
+    },
+    {
+      "path": "resources/wcdb/macos/universal/libwcdb_api.dylib",
+      "gitBlobSha": "2d457d1ceb9f3fc05ae11936195b4385fd6be151",
+      "size": 1502800
+    },
+    {
+      "path": "resources/wcdb/win32/arm64/WCDB.dll",
+      "gitBlobSha": "60c3508edf8110fe0af273020fc49e1bcf162adf",
+      "size": 5410304
+    },
+    {
+      "path": "resources/wcdb/win32/arm64/wcdb_api.dll",
+      "gitBlobSha": "1a1139cc2bea78b15ca575e700684994b1f2acf1",
+      "size": 1306624
+    },
+    {
+      "path": "resources/wcdb/win32/x64/SDL2.dll",
+      "gitBlobSha": "e26bcb1c3be11930053e594bc070df85b68d7b89",
+      "size": 2500096
+    },
+    {
+      "path": "resources/wcdb/win32/x64/WCDB.dll",
+      "gitBlobSha": "81270791fbe700cf5921ab19a16ffebc393fbf34",
+      "size": 9664512
+    },
+    {
+      "path": "resources/wcdb/win32/x64/wcdb_api.dll",
+      "gitBlobSha": "8842616a449f7725e0b8d9da479ad33708a42e22",
+      "size": 1387008
+    },
+    {
+      "path": "resources/wedecrypt/linux/x64/weflow-image-native-linux-x64.node",
+      "gitBlobSha": "f61ba218cf6de44381ed336ea96deb2dc3ece1a0",
+      "size": 490736
+    },
+    {
+      "path": "resources/wedecrypt/macos/arm64/weflow-image-native-macos-arm64.node",
+      "gitBlobSha": "7a9a1a0a504faa1adc76bfbfb51a7e81f4daa73b",
+      "size": 452784
+    },
+    {
+      "path": "resources/wedecrypt/win32/arm64/weflow-image-native-win32-arm64.node",
+      "gitBlobSha": "e3bdaa63ec32304419eb9c0c47fe312282020b1b",
+      "size": 258560
+    },
+    {
+      "path": "resources/wedecrypt/win32/x64/weflow-image-native-win32-x64.node",
+      "gitBlobSha": "7b370add296424de54d7fbcab59fe95313c56d1b",
+      "size": 290816
+    },
+    {
+      "path": "resources/welive/linux/x64/resources/linux/x64/libwcdb_api.so",
+      "gitBlobSha": "da89e3fb38c85d0e66ef25f9cbf8af8b588bccff",
+      "size": 8169616
+    },
+    {
+      "path": "resources/welive/linux/x64/welive",
+      "gitBlobSha": "eced1825f216924da2533c86f76308b2947c6377",
+      "size": 2461720
+    },
+    {
+      "path": "resources/welive/macos/arm64/resources/macos/universal/libWCDB.dylib",
+      "gitBlobSha": "ef6d5df1b079e63e864cb7426a3ec359317ec641",
+      "size": 10558056
+    },
+    {
+      "path": "resources/welive/macos/arm64/resources/macos/universal/libwcdb_api.dylib",
+      "gitBlobSha": "b7b34e2c52eb82216af361c46340977bf66239f6",
+      "size": 1262784
+    },
+    {
+      "path": "resources/welive/macos/arm64/welive",
+      "gitBlobSha": "d2c882de7c0f1a9e9a19ae764975c5c10d8f4c16",
+      "size": 1899104
+    },
+    {
+      "path": "resources/welive/macos/x64/resources/macos/universal/libWCDB.dylib",
+      "gitBlobSha": "ef6d5df1b079e63e864cb7426a3ec359317ec641",
+      "size": 10558056
+    },
+    {
+      "path": "resources/welive/macos/x64/resources/macos/universal/libwcdb_api.dylib",
+      "gitBlobSha": "fc36ee71fe1c7871a2bf2141f6dcf78b7e3804f3",
+      "size": 1471760
+    },
+    {
+      "path": "resources/welive/macos/x64/welive",
+      "gitBlobSha": "2b442341b6558c4d64e5dd073359a0d560cd3c99",
+      "size": 2228808
+    },
+    {
+      "path": "resources/welive/win32/arm64/resources/win32/arm64/WCDB.dll",
+      "gitBlobSha": "60c3508edf8110fe0af273020fc49e1bcf162adf",
+      "size": 5410304
+    },
+    {
+      "path": "resources/welive/win32/arm64/resources/win32/arm64/wcdb_api.dll",
+      "gitBlobSha": "8f333ac931bb223017f584e3c1f7adf051a6ab67",
+      "size": 1287680
+    },
+    {
+      "path": "resources/welive/win32/arm64/welive.exe",
+      "gitBlobSha": "55c5c8528a0483fdd69b35f8b3d51f912ea148a2",
+      "size": 1858048
+    },
+    {
+      "path": "resources/welive/win32/x64/resources/win32/x64/WCDB.dll",
+      "gitBlobSha": "81270791fbe700cf5921ab19a16ffebc393fbf34",
+      "size": 9664512
+    },
+    {
+      "path": "resources/welive/win32/x64/resources/win32/x64/wcdb_api.dll",
+      "gitBlobSha": "b96e044a777c5f41abf60e8928fcd9085de87127",
+      "size": 1191936
+    },
+    {
+      "path": "resources/welive/win32/x64/welive.exe",
+      "gitBlobSha": "50470e5f78e97e441e5244d024d8af0d6a21238c",
+      "size": 2142720
+    }
+  ],
+  "platforms": {
+    "win32-x64": {
+      "wcdbLibPath": "resources/wcdb/win32/x64/wcdb_api.dll",
+      "imageNativeAddonPath": "resources/wedecrypt/win32/x64/weflow-image-native-win32-x64.node",
+      "welivePath": "resources/welive/win32/x64/welive.exe"
+    },
+    "win32-arm64": {
+      "wcdbLibPath": "resources/wcdb/win32/arm64/wcdb_api.dll",
+      "imageNativeAddonPath": "resources/wedecrypt/win32/arm64/weflow-image-native-win32-arm64.node",
+      "welivePath": "resources/welive/win32/arm64/welive.exe"
+    },
+    "darwin-arm64": {
+      "wcdbLibPath": "resources/wcdb/macos/universal/libwcdb_api.dylib",
+      "imageNativeAddonPath": "resources/wedecrypt/macos/arm64/weflow-image-native-macos-arm64.node",
+      "welivePath": "resources/welive/macos/arm64/welive"
+    },
+    "linux-x64": {
+      "wcdbLibPath": "resources/wcdb/linux/x64/libwcdb_api.so",
+      "imageNativeAddonPath": "resources/wedecrypt/linux/x64/weflow-image-native-linux-x64.node",
+      "welivePath": "resources/welive/linux/x64/welive"
+    }
+  }
+}
