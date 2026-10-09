@@ -3,6 +3,11 @@
     "repository": "Panther114/Weport",
     "commit": "3b9e2afd341f0eef56d4be9dafca25c8fe8be533"
   },
+  "runtimeBlocks": {
+    "win32-x64": {
+      "wcdbLibPath": "Windows Electron check returned -1000 and logged expired: self-destruct triggered on 2026-10-09"
+    }
+  },
   "files": [
     {
       "path": "resources/key/win32/x64/wx_key.dll",

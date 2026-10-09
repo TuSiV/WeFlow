@@ -1,5 +1,7 @@
 # Windows x64 原生组件配置与验证状态
 
+**当前阻碍：随包数据库库实际运行报告过期，已禁用自动加载。配置代码已补齐，但完整导出链路未通过验证，尚无 EXE 或 Release。**
+
 ## 已配置
 
 - 固定组件来源为 Panther114/Weport 提交 `3b9e2afd341f0eef56d4be9dafca25c8fe8be533`，大小及 Git blob SHA-1 记录于 `shared/native-components.json`。
@@ -43,6 +45,10 @@ npx electron-builder --win nsis --x64 --publish never
 Windows 工作流不发布正式 Release。需要先在数据库副本上成功导出，核对消息数量、发送人、时间及图片附件，再满足发布条件。
 
 ## 已知未解决事项
+
+2026-10-09 的 Windows x64 完整 Electron 应用测试实际返回 `wcdb_init = -1000`，诊断日志为 `wcdb_init [SecurityStatus:0]` 和 `expired: self-destruct triggered`。测试在创建或打开任何聊天数据库之前停止，没有证明或观察到数据库被修改。日志证明该测试环境下初始化失败并报告过期；不能据此推断对所有用户的行为。
+
+因此 `runtimeBlocks.win32-x64.wcdbLibPath` 禁用了这组已知失败的随包数据库库自动加载。现有密钥适配、媒体路径、旧引擎清单适配及构建配置保留，但不能宣称完整读取导出链路已经可用。需要替换为兼容且可验证的数据库组件；当前没有其可重建源码，不能通过配置修复库内部的过期状态。Windows 安装包及 Release 未生成。
 
 WCDB 二进制仍包含 `api.weflow.top`、`expired: self-destruct triggered`、`??DATA_CORRUPTED_BY_PIRACY_PROTECTION??` 字符串。配置适配未消除或审计这些行为，文件哈希不证明行为安全。当前没有该包装库和引擎的可重建源码，不能宣称已得到可审计、只读的证据提取实现。
 

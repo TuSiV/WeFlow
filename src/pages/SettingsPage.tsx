@@ -2658,7 +2658,7 @@ function SettingsPage({ onClose }: SettingsPageProps = {}) {
       <div className="form-group">
         <label>第三方组件路径</label>
         <span className="form-hint">
-          Windows x64 组件包会自动配置读取、媒体解密和导出路径；密钥获取工具留空时使用随包适配器。也可在此指定自己的组件。
+          Windows x64 自动配置已校验的媒体和导出组件；随包数据库库在运行测试中报告过期，已禁用自动加载，需要提供兼容的数据库库。密钥工具留空使用随包适配器。
         </span>
       </div>
 

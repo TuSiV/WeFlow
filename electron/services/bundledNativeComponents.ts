@@ -8,6 +8,8 @@ type ComponentKey = 'wcdbLibPath' | 'imageNativeAddonPath' | 'welivePath' | 'key
 /** Resolve only the pinned Windows x64 bundle. Explicit user paths remain overrides. */
 export function resolveBundledComponentPath(key: ComponentKey): string | null {
   if (process.platform !== 'win32' || process.arch !== 'x64') return null
+  const blocks = manifest.runtimeBlocks as Partial<Record<string, Partial<Record<ComponentKey, string>>>>
+  if (blocks['win32-x64']?.[key]) return null
   const paths = manifest.platforms['win32-x64'] as Partial<Record<ComponentKey, string>>
   const relative = paths[key]
   if (!relative) return null
