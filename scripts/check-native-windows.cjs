@@ -132,8 +132,14 @@ if (!process.versions.electron) {
   process.exitCode = child.status ?? 1
 } else {
   const { app } = require('electron')
-  app.whenReady().then(main).then(() => app.exit(0)).catch(error => {
+  // This headless test has no application lifecycle to close. Exit the test
+  // process directly after its assertions and cleanup, avoiding Electron's
+  // GUI shutdown path while native libraries have been loaded.
+  app.whenReady().then(main).then(() => {
+    console.log('Native test cleanup completed; exiting test host.')
+    process.exit(0)
+  }).catch(error => {
     console.error(error)
-    app.exit(1)
+    process.exit(1)
   })
 }
