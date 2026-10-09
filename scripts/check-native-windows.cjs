@@ -15,6 +15,16 @@ async function main() {
   const init = wcdb.func('int32 wcdb_init()')
   const shutdown = wcdb.func('int32 wcdb_shutdown()')
   const initCode = init()
+  if (initCode !== 0) {
+    try {
+      const output = [null]
+      wcdb.func('int32 wcdb_get_logs(_Out_ void **outJson)')(output)
+      if (output[0]) {
+        console.error('WCDB diagnostics:', koffi.decode(output[0], 'char', -1))
+        wcdb.func('void wcdb_free_string(void *ptr)')(output[0])
+      }
+    } catch (error) { console.error('No WCDB diagnostic log:', String(error)) }
+  }
   assert.equal(initCode, 0, `WCDB initialization failed (${initCode})`)
   shutdown()
   const key = koffi.load(path.join(root, 'resources/key/win32/x64/wx_key.dll'))
@@ -50,11 +60,17 @@ async function main() {
 }
 if (!process.versions.electron) {
   // Use the application's actual host/ABI, rather than plain node.exe.
+  const environment = { ...process.env }
+  delete environment.ELECTRON_RUN_AS_NODE
   const child = spawnSync(require('electron'), [__filename], {
-    env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, stdio: 'inherit', timeout: 60000
+    env: environment, stdio: 'inherit', timeout: 60000
   })
   if (child.error) console.error(child.error)
   process.exitCode = child.status ?? 1
 } else {
-  main().catch(error => { console.error(error); process.exitCode = 1 })
+  const { app } = require('electron')
+  app.whenReady().then(main).then(() => app.exit(0)).catch(error => {
+    console.error(error)
+    app.exit(1)
+  })
 }
