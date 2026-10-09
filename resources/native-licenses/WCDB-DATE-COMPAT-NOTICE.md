@@ -1,6 +1,6 @@
 # WCDB date compatibility adaptation
 
-Reference analysis: https://github.com/Dinnerb0ne2/WeFlow-WCDB-Patch/blob/master/DETAILS.md
+Reference analysis: https://github.com/Dinnerb0ne2/WeFlow-WCDB-Patch/blob/cbcfcf4d344d4e9c477ba9c12063594af68a5025/DETAILS.md
 Author: Dinnerb0ne2. License: CC BY-NC-SA 4.0.
 
 This fork independently checked the two instruction sites in the exact pinned

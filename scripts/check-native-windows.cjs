@@ -37,7 +37,7 @@ async function main() {
   assert.equal(typeof addon.decryptDatNative, 'function')
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'weflow-native-'))
   try {
-    const fixture = require('./fixtures/windows-wcdb.json')
+    const fixture = require('./fixtures/windows-wcdb-passphrase.json')
     const accountDir = path.join(temporary, 'synthetic_me')
     for (const file of fixture.files) {
       const data = Buffer.from(file.base64, 'base64')
@@ -58,7 +58,16 @@ async function main() {
     core.setLibPath(path.join(root, 'resources/wcdb/win32/x64/wcdb_api.dll'))
     assert.equal(await core.initialize(), true, coreModule.exports.getLastDllInitError())
     try {
-      assert.equal(await core.open(accountDir, fixture.dbKey), true, coreModule.exports.getLastDllInitError())
+      const opened = await core.open(accountDir, fixture.dbKey)
+      if (!opened) {
+        const logs = [null]
+        wcdb.func('int32 wcdb_get_logs(_Out_ void **outJson)')(logs)
+        if (logs[0]) {
+          console.error('Fixture open diagnostics:', koffi.decode(logs[0], 'char', -1))
+          wcdb.func('void wcdb_free_string(void *ptr)')(logs[0])
+        }
+      }
+      assert.equal(opened, true, coreModule.exports.getLastDllInitError())
       const sessions = await core.getSessions()
       console.log('Synthetic sessions:', JSON.stringify(sessions))
       assert.equal(sessions.success, true)
@@ -107,7 +116,8 @@ async function main() {
     console.log('Native application binding, encrypted session/message reads, image decrypt and successful synthetic JSONL export passed.')
     console.log('Real-account key acquisition and real-account chat export are not tested by this check.')
   } finally {
-    fs.rmSync(temporary, { recursive: true, force: true })
+    try { fs.rmSync(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }) }
+    catch (error) { console.warn('Temporary cleanup failed:', String(error)) }
   }
 }
 if (!process.versions.electron) {
