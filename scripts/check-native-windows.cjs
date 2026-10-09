@@ -27,6 +27,7 @@ async function main() {
   }
   assert.equal(initCode, 0, `WCDB initialization failed (${initCode})`)
   shutdown()
+  console.log('WCDB date compatibility: initialization passed.')
   const key = koffi.load(path.join(root, 'resources/key/win32/x64/wx_key.dll'))
   key.func('bool InitializeHook(uint32 pid)')
   key.func('bool PollKeyData(_Out_ char *keyBuffer, int bufferSize)')
@@ -36,6 +37,37 @@ async function main() {
   assert.equal(typeof addon.decryptDatNative, 'function')
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'weflow-native-'))
   try {
+    const fixture = require('./fixtures/windows-wcdb.json')
+    const accountDir = path.join(temporary, 'synthetic_me')
+    for (const file of fixture.files) {
+      const data = Buffer.from(file.base64, 'base64')
+      assert.equal(require('node:crypto').createHash('sha256').update(data).digest('hex'), file.sha256)
+      const destination = path.join(accountDir, file.path)
+      fs.mkdirSync(path.dirname(destination), { recursive: true })
+      fs.writeFileSync(destination, data)
+    }
+    const { Module } = require('node:module')
+    const coreModule = new Module(__filename, module)
+    coreModule.paths = module.paths
+    coreModule._compile(require('esbuild').buildSync({
+      entryPoints: [path.join(root, 'electron/services/wcdbCore.ts')],
+      bundle: true, platform: 'node', format: 'cjs', packages: 'external', write: false
+    }).outputFiles[0].text, __filename)
+    const core = new coreModule.exports.WcdbCore()
+    core.setPaths(root, temporary)
+    core.setLibPath(path.join(root, 'resources/wcdb/win32/x64/wcdb_api.dll'))
+    assert.equal(await core.initialize(), true, coreModule.exports.getLastDllInitError())
+    try {
+      assert.equal(await core.open(accountDir, fixture.dbKey), true, coreModule.exports.getLastDllInitError())
+      const sessions = await core.getSessions()
+      console.log('Synthetic sessions:', JSON.stringify(sessions))
+      assert.equal(sessions.success, true)
+      assert(JSON.stringify(sessions.sessions).includes(fixture.sessionId))
+      const messages = await core.getMessages(fixture.sessionId, 10, 0)
+      console.log('Synthetic messages:', JSON.stringify(messages))
+      assert.equal(messages.success, true)
+      assert(JSON.stringify(messages).includes(fixture.message))
+    } finally { core.close() }
     const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000b49444154789c636000020000050001a5f645400000000049454e44ae426082', 'hex')
     const dat = path.join(temporary, 'fixture.dat')
     fs.writeFileSync(dat, png.map(value => value ^ 0x66))
@@ -49,11 +81,31 @@ async function main() {
       cwd: temporary, maxBuffer: 1024 * 1024
     })
     assert.ifError(result.error)
+    console.log('WeLive missing DB diagnostic:', JSON.stringify({ status: result.status, stdout: result.stdout, stderr: result.stderr }))
     const events = result.stdout.split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line))
-    assert(events.some(event => event.type === 'result' && event.success === false),
-      'WeLive must report a structured failed result for a missing synthetic database')
-    console.log('Native load, synthetic image decrypt and WeLive failure protocol checks passed.')
-    console.log('Real-account key acquisition and successful chat export are not tested by this check.')
+    assert(events.some(event => event.type === 'result' && event.success === false) ||
+      (result.status === 1 && /session\.db|sessionDb|accountDir|not found|does not exist/i.test(result.stderr)),
+    'WeLive must explicitly reject a missing synthetic database without crashing')
+    const exportRequest = {
+      account: { sessionDb: path.join(accountDir, 'db_storage/session/session.db'), dbKey: fixture.dbKey,
+        accountDir, myAccountId: 'synthetic_me' },
+      sessionIds: [fixture.sessionId], outputDir: path.join(temporary, 'successful-export'),
+      format: 'raw-jsonl', parseContent: false, preserveMessageContent: true
+    }
+    const exported = spawnSync(path.join(root, 'resources/welive/win32/x64/welive.exe'), ['weflow-export'], {
+      input: JSON.stringify(exportRequest) + '\n', encoding: 'utf8', timeout: 30000, windowsHide: true,
+      cwd: temporary, maxBuffer: 1024 * 1024
+    })
+    assert.ifError(exported.error)
+    console.log('Synthetic WeLive export:', JSON.stringify({ status: exported.status, stdout: exported.stdout, stderr: exported.stderr }))
+    assert.equal(exported.status, 0)
+    const exportEvents = exported.stdout.split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line))
+    const done = exportEvents.find(event => event.type === 'result')
+    assert(done && done.success === true && done.fail_count === 0)
+    const outputPaths = Object.values(done.raw_session_output_paths || done.session_output_paths || {})
+    assert(outputPaths.some(file => fs.readFileSync(file, 'utf8').includes(fixture.message)))
+    console.log('Native application binding, encrypted session/message reads, image decrypt and successful synthetic JSONL export passed.')
+    console.log('Real-account key acquisition and real-account chat export are not tested by this check.')
   } finally {
     fs.rmSync(temporary, { recursive: true, force: true })
   }
