@@ -1,6 +1,8 @@
 # Windows x64 原生组件与导出验证
 
-已修复固定数据库库的到期初始化失败。Windows 实际 Electron 初始化、模拟加密会话和消息读取、模拟图片解密已通过。正在验证实际 exportWorker 的源码 HTML 导出与安装包；真实微信账号导出未验证。
+已修复固定数据库库的到期初始化失败。Windows 实际 Electron 初始化、模拟加密会话和消息读取、模拟图片解密、实际 exportWorker 的源码 HTML 导出、类型检查、生产构建和 NSIS 打包全部通过；真实微信账号导出未验证。
+
+验证提交：`1bc76139fa03c9fdadf397dfd3fdc010fb39d036`。[完整 Windows 检查](https://github.com/TuSiV/WeFlow/actions/runs/37912313615)与发布任务均成功。[预发布安装包](https://github.com/TuSiV/WeFlow/releases/tag/windows-wcdb-compat-37912313615)：`WeFlow-5.0.0-wcdb-compat.11-Setup.exe`，191379461 字节，SHA-256 `baa6235ddc55d9118a54e63607f11a8869491b92aba7338f47c328d9db3e213e`，同时提供 `SHA256SUMS.txt`。
 
 ## 默认组件与导出路径
 
