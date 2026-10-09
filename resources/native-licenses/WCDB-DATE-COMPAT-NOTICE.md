@@ -12,3 +12,9 @@ Git blob checks, and tests for branch targets and rejection of other files.
 
 The derived DLL and adaptation retain CC BY-NC-SA 4.0. See LICENSE for
 the license text distributed with the original bundle.
+
+Additional independently developed WeLive adaptation in this fork: remove only
+the six-byte conditional branch to the fixed-date expired-build exit in the
+pinned Windows x64 executable. The original clock-validity check is preserved.
+The source and complete transformed output are verified by pinned hashes.
+The original Weport license continues to apply to the derived executable.

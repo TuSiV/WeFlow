@@ -139,8 +139,10 @@
     },
     {
       "path": "resources/welive/win32/x64/welive.exe",
-      "gitBlobSha": "50470e5f78e97e441e5244d024d8af0d6a21238c",
-      "size": 2142720
+      "gitBlobSha": "48f33fcefbea7463ab1e3f7fcb2cb1d6e1dd0d38",
+      "size": 2142720,
+      "sourceGitBlobSha": "50470e5f78e97e441e5244d024d8af0d6a21238c",
+      "transform": "welive-date-compat-v1"
     }
   ],
   "platforms": {

@@ -2,7 +2,10 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 const crypto = require('node:crypto')
 const manifest = require('../shared/native-components.json')
-const { applyDateCompatibility } = require('./wcdb-date-compat.cjs')
+const transforms = {
+  'wcdb-date-compat-v1': require('./wcdb-date-compat.cjs').applyDateCompatibility,
+  'welive-date-compat-v1': require('./welive-date-compat.cjs').applyDateCompatibility
+}
 const root = path.resolve(__dirname, '..')
 
 function selectFiles(target) {
@@ -33,8 +36,9 @@ async function install(target, checkOnly = false) {
     let data = Buffer.from(await response.arrayBuffer())
     verify(data, { ...file, gitBlobSha: file.sourceGitBlobSha || file.gitBlobSha })
     if (file.transform) {
-      if (file.transform !== 'wcdb-date-compat-v1') throw new Error(`Unsupported transform: ${file.transform}`)
-      data = applyDateCompatibility(data)
+      const transform = transforms[file.transform]
+      if (!transform) throw new Error(`Unsupported transform: ${file.transform}`)
+      data = transform(data)
     }
     verify(data, file)
     await fs.mkdir(path.dirname(destination), { recursive: true })

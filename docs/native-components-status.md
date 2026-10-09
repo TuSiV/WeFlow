@@ -1,6 +1,6 @@
 # Windows x64 原生组件配置与验证状态
 
-**已加入仅匹配固定 DLL 的到期日期兼容修复。Windows 实际运行验证待完成；真实账号导出未验证。**
+**已加入仅匹配固定 DLL 的到期日期兼容修复。Windows 实际 Electron 初始化、模拟加密会话和消息读取、模拟图片解密已通过；导出引擎另有到期检查，修复后验证进行中。真实账号导出未验证。**
 
 ## 已配置
 
@@ -42,7 +42,7 @@ npx electron-builder --win nsis --x64 --publish never
 - Windows 原生运行：由 Windows native configuration check 工作流测试 WCDB 初始化、密钥 DLL 符号、模拟图片解密及 WeLive 缺失数据库的 NDJSON 失败响应；通过后构建测试 EXE，保存为 Actions artifact。
 - 真实聊天导出：尚未验证。模拟测试不证明密钥正确、消息和附件完整或多年记录导出可用。
 
-通过 Windows 组件测试和打包后可提供预发布安装包。真实聊天应先在数据库副本上导出，核对消息数量、发送人、时间及图片附件。
+Windows 工作流仅在所有组件检查、类型检查、构建和打包通过后发布预发布安装包，并附 SHA-256 校验文件。真实聊天应先在数据库副本上导出，核对消息数量、发送人、时间及图片附件。
 
 ## 到期日期修复及验证限制
 
@@ -54,3 +54,9 @@ npx electron-builder --win nsis --x64 --publish never
 WCDB 二进制仍包含 `api.weflow.top`、`expired: self-destruct triggered`、`??DATA_CORRUPTED_BY_PIRACY_PROTECTION??` 字符串。配置适配未消除或审计这些行为，文件哈希不证明行为安全。当前没有该包装库和引擎的可重建源码，不能宣称已得到可审计、只读的证据提取实现。
 
 Windows ARM64、macOS、Linux 仍为外部组件模式，本次没有补齐其自动密钥获取链路。
+
+### 导出引擎到期修复
+
+2026-10-09 Windows 测试中，WeLive 在读取请求之前以退出码 1 返回 `error: this build has expired`。独立反汇编定位：主入口调用 `GetSystemTimePreciseAsFileTime`，与 FILETIME `0x1dd2105a3f0c000`（2026-07-31 16:00:00 UTC）比较后，以 `jge` 进入该退出路径。构建转换只将文件偏移 `0xf249c` 的 `0f8dac130000` 改为六个 `90`（NOP）；系统时间有效性检查和 CLI 处理保留。
+
+只接受原文件 SHA-256 `1c73c5cf710468f6bc400f5eb4680e1eeab149dabdba83852f493f4c5ef07bcf`，输出必须为 `62a472e7564b95f5c992db6e7e94d637ba64fd8d6696517191106b49ca9f5e33`。与 DLL 一样，下载前后和运行加载前分别验证源与派生文件。未修改 WeLive 内部的另一份 WCDB 包装 DLL。
