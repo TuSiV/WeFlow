@@ -48,4 +48,13 @@ async function main() {
     fs.rmSync(temporary, { recursive: true, force: true })
   }
 }
-main().catch(error => { console.error(error); process.exitCode = 1 })
+if (!process.versions.electron) {
+  // Use the application's actual host/ABI, rather than plain node.exe.
+  const child = spawnSync(require('electron'), [__filename], {
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, stdio: 'inherit', timeout: 60000
+  })
+  if (child.error) console.error(child.error)
+  process.exitCode = child.status ?? 1
+} else {
+  main().catch(error => { console.error(error); process.exitCode = 1 })
+}

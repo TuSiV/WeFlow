@@ -1,5 +1,6 @@
 import { spawn } from 'child_process'
 import { chmodSync, existsSync } from 'fs'
+import { readLegacyRawManifest } from './legacyWeliveManifest'
 
 export interface WeliveRawExportManifest {
   path: string
@@ -321,8 +322,24 @@ export async function runWeliveExport(options: RunWeliveExportOptions): Promise<
 
     // close 在 stdout/stderr 都关闭后触发；分块导出时 result 事件更大，
     // 若在 exit 阶段结算，尾部输出尚未排空会被误判为缺少会话结果。
-    child.on('close', (code, signal) => {
+    child.on('close', async (code, signal) => {
       drainStdout()
+      let legacyManifestFailures = 0
+      if (!aborted && code === 0 && rawResult?.type === 'result' && options.request.format === 'raw-jsonl') {
+        for (const sessionId of options.request.sessionIds) {
+          if (rawExportManifests[sessionId] || failedSessionErrors[sessionId]) continue
+          const outputPath = rawSessionOutputPaths[sessionId] || sessionOutputPaths[sessionId]
+          if (!outputPath) continue
+          try {
+            const manifest = await readLegacyRawManifest(outputPath, options.request.exportsDir || options.request.outputDir)
+            rawSessionOutputPaths[sessionId] = manifest.path
+            rawExportManifests[sessionId] = manifest
+          } catch (error) {
+            failedSessionErrors[sessionId] = `WeLive 原始输出校验失败: ${String(error)}`
+            legacyManifestFailures++
+          }
+        }
+      }
       const failedSessionIds = aborted ? [] : Object.keys(failedSessionErrors)
       const success = !aborted && code === 0 && rawResult?.type === 'result' && rawResult.success !== false
       const diagnostics = {
@@ -340,8 +357,8 @@ export async function runWeliveExport(options: RunWeliveExportOptions): Promise<
       const errorText = stderr.trim() || `WeLive 导出引擎退出码: ${formatExitCode(code, signal)}`
       finish({
         success,
-        successCount: Number((rawResult as any)?.success_count ?? Object.keys(sessionOutputPaths).length),
-        failCount: Number((rawResult as any)?.fail_count ?? failedSessionIds.length),
+        successCount: Math.max(0, Number((rawResult as any)?.success_count ?? Object.keys(sessionOutputPaths).length) - legacyManifestFailures),
+        failCount: Math.max(Number((rawResult as any)?.fail_count ?? 0), failedSessionIds.length),
         failedSessionIds,
         failedSessionErrors,
         sessionOutputPaths,
