@@ -4,6 +4,7 @@ import crypto from 'crypto'
 import Store from 'electron-store'
 import { expandHomePath } from '../utils/pathUtils'
 import { CacheMapStore } from './cacheMapStore'
+import { resolveBundledComponentPath } from './bundledNativeComponents'
 
 // 条件导入 electron（Worker 环境中不可用）
 let app: any = null
@@ -412,6 +413,9 @@ export class ConfigService {
       return this.cacheMapStore.get(key as string) as ConfigSchema[K]
     }
     const raw = this.store.get(key)
+    if ((key === 'wcdbLibPath' || key === 'imageNativeAddonPath' || key === 'welivePath') && !raw) {
+      return (resolveBundledComponentPath(key) || '') as ConfigSchema[K]
+    }
 
     if (ENCRYPTED_BOOL_KEYS.has(key)) {
       const str = typeof raw === 'string' ? raw : ''

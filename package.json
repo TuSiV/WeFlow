@@ -24,7 +24,9 @@
     "electron:dev": "node scripts/prepare-electron-runtime.cjs && vite --mode electron",
     "electron:build": "npm run build",
     "components:install": "node scripts/install-native-components.cjs",
-    "components:check": "node scripts/install-native-components.cjs --check"
+    "components:check": "node scripts/install-native-components.cjs --check",
+    "components:test": "node scripts/test-native-resolution.cjs",
+    "components:test:windows": "node scripts/check-native-windows.cjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.12",
@@ -110,7 +112,7 @@
     "appId": "com.WeFlow.app",
     "publish": {
       "provider": "github",
-      "owner": "hicccc77",
+      "owner": "TuSiV",
       "repo": "WeFlow",
       "releaseType": "release"
     },

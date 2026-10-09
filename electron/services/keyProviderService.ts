@@ -1,6 +1,7 @@
 import { spawn } from 'child_process'
 import { existsSync } from 'fs'
 import { ConfigService } from './config'
+import { resolveBundledComponentPath } from './bundledNativeComponents'
 
 /**
  * 密钥获取（数据库密钥 / 图片密钥）完全外包给用户自备的第三方可执行程序（keyProviderPath），
@@ -24,6 +25,13 @@ type ProviderRequest =
 
 export class KeyProviderService {
   private configService = new ConfigService()
+  private bundledService: Promise<import('./bundledWindowsKeyService').KeyService> | null = null
+
+  private getBundledService() {
+    if (String(this.configService.get('keyProviderPath') || '').trim()) return null
+    if (!resolveBundledComponentPath('keyDllPath')) return null
+    return this.bundledService ||= import('./bundledWindowsKeyService').then(({ KeyService }) => new KeyService())
+  }
 
   private getProviderPath(): string | null {
     const configured = String(this.configService.get('keyProviderPath') || '').trim()
@@ -112,6 +120,8 @@ export class KeyProviderService {
     accountId?: string,
     internalDbKeyHex?: string
   ): Promise<DbKeyResult> {
+    const bundled = this.getBundledService()
+    if (bundled) return (await bundled).autoGetDbKey(timeoutMs, onStatus)
     return this.invoke<DbKeyResult>(
       { action: 'get_db_key', dbPath, accountId, internalDbKeyHex },
       onStatus,
@@ -124,6 +134,8 @@ export class KeyProviderService {
     onStatus?: (message: string) => void,
     accountId?: string
   ): Promise<ImageKeyResult> {
+    const bundled = this.getBundledService()
+    if (bundled) return (await bundled).autoGetImageKey(manualDir, onStatus, accountId)
     return this.invoke<ImageKeyResult>({ action: 'get_image_key', accountDir: manualDir, accountId }, onStatus)
   }
 
@@ -131,6 +143,8 @@ export class KeyProviderService {
     userDir: string,
     onStatus?: (message: string) => void
   ): Promise<ImageKeyResult> {
+    const bundled = this.getBundledService()
+    if (bundled) return (await bundled).autoGetImageKeyByMemoryScan(userDir, onStatus)
     return this.invoke<ImageKeyResult>({ action: 'scan_image_key_memory', accountDir: userDir }, onStatus)
   }
 }

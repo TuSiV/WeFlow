@@ -2658,7 +2658,7 @@ function SettingsPage({ onClose }: SettingsPageProps = {}) {
       <div className="form-group">
         <label>第三方组件路径</label>
         <span className="form-hint">
-          WeFlow 不再内置数据解密相关的原生组件，以下四项均需自行提供符合接口约定的实现，留空则对应功能返回"未配置"提示
+          Windows x64 组件包会自动配置读取、媒体解密和导出路径；密钥获取工具留空时使用随包适配器。也可在此指定自己的组件。
         </span>
       </div>
 
@@ -2680,7 +2680,7 @@ function SettingsPage({ onClose }: SettingsPageProps = {}) {
 
       <div className="form-group">
         <label>密钥获取工具路径</label>
-        <span className="form-hint">用于获取数据库密钥/图片密钥的可执行文件，详见密钥获取工具协议文档</span>
+        <span className="form-hint">Windows x64 留空使用随包适配器；填写路径则使用指定的外部工具</span>
         <input
           type="text"
           placeholder="未配置"

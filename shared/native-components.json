@@ -5,6 +5,11 @@
   },
   "files": [
     {
+      "path": "resources/key/win32/x64/wx_key.dll",
+      "gitBlobSha": "9ab5f7be1e7720e32928d15aeff2086517006780",
+      "size": 195072
+    },
+    {
       "path": "resources/wcdb/linux/x64/libwcdb_api.so",
       "gitBlobSha": "0c0629715e20967fa8de9334509971abfad5b4f3",
       "size": 11831688
@@ -137,6 +142,7 @@
   ],
   "platforms": {
     "win32-x64": {
+      "keyDllPath": "resources/key/win32/x64/wx_key.dll",
       "wcdbLibPath": "resources/wcdb/win32/x64/wcdb_api.dll",
       "imageNativeAddonPath": "resources/wedecrypt/win32/x64/weflow-image-native-win32-x64.node",
       "welivePath": "resources/welive/win32/x64/welive.exe"
