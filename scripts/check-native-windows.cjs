@@ -81,42 +81,43 @@ async function main() {
     const dat = path.join(temporary, 'fixture.dat')
     fs.writeFileSync(dat, png.map(value => value ^ 0x66))
     assert.deepEqual(addon.decryptDatNative(dat, 0x66).data, png)
-    const request = {
-      account: { sessionDb: path.join(temporary, 'missing', 'session.db'), dbKey: '00'.repeat(32) },
-      sessionIds: ['synthetic-test'], outputDir: path.join(temporary, 'output')
-    }
-    const result = spawnSync(path.join(root, 'resources/welive/win32/x64/welive.exe'), ['weflow-export'], {
-      input: JSON.stringify(request) + '\n', encoding: 'utf8', timeout: 30000, windowsHide: true,
-      cwd: temporary, maxBuffer: 1024 * 1024
+    const { Worker } = require('node:worker_threads')
+    const outputDir = path.join(temporary, 'successful-export')
+    const worker = new Worker(path.join(root, 'dist-electron/exportWorker.js'), {
+      env: { ...process.env, WEFLOW_USER_DATA_PATH: path.join(temporary, 'worker-config') },
+      workerData: {
+        sessionIds: [fixture.sessionId], outputDir, dbPath: temporary, accountDir,
+        decryptKey: fixture.dbKey, myAccountId: 'synthetic_me',
+        resourcesPath: path.join(root, 'resources'), userDataPath: temporary,
+        wcdbLibPath: path.join(root, 'resources/wcdb/win32/x64/wcdb_api.dll'),
+        options: { format: 'html', exportImages: false, exportVoices: false, exportVideos: false,
+          exportEmojis: false, exportFiles: false }
+      }
     })
-    assert.ifError(result.error)
-    console.log('WeLive missing DB diagnostic:', JSON.stringify({ status: result.status, stdout: result.stdout, stderr: result.stderr }))
-    const events = result.stdout.split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line))
-    assert(events.some(event => event.type === 'result' && event.success === false) ||
-      (result.status === 1 && /session\.db|sessionDb|accountDir|not found|does not exist/i.test(result.stderr)),
-    'WeLive must explicitly reject a missing synthetic database without crashing')
-    const exportRequest = {
-      account: { sessionDb: path.join(accountDir, 'db_storage/session/session.db'), dbKey: fixture.dbKey,
-        accountDir, myAccountId: 'synthetic_me' },
-      sessionIds: [fixture.sessionId], outputDir: path.join(temporary, 'successful-export'),
-      format: 'raw-jsonl', parseContent: false, preserveMessageContent: true
+    let timeout
+    try {
+      const exported = await new Promise((resolve, reject) => {
+        timeout = setTimeout(() => reject(new Error('Synthetic HTML export timed out')), 30000)
+        worker.on('message', message => {
+          if (message.type === 'export:result') resolve(message.data)
+          if (message.type === 'export:error') reject(new Error(message.error))
+        })
+        worker.on('error', reject)
+        worker.on('exit', code => reject(new Error(`Export worker exited before returning result (${code})`)))
+      })
+      console.log('Synthetic application HTML export:', JSON.stringify(exported))
+      assert.equal(exported.success, true)
+      assert.equal(exported.successCount, 1)
+      const outputPaths = Object.values(exported.sessionOutputPaths || {})
+      assert(outputPaths.some(file => path.extname(file) === '.html' && fs.readFileSync(file, 'utf8').includes(fixture.message)))
+    } finally {
+      clearTimeout(timeout)
+      await worker.terminate()
     }
-    const exported = spawnSync(path.join(root, 'resources/welive/win32/x64/welive.exe'), ['weflow-export'], {
-      input: JSON.stringify(exportRequest) + '\n', encoding: 'utf8', timeout: 30000, windowsHide: true,
-      cwd: temporary, maxBuffer: 1024 * 1024
-    })
-    assert.ifError(exported.error)
-    console.log('Synthetic WeLive export:', JSON.stringify({ status: exported.status, stdout: exported.stdout, stderr: exported.stderr }))
-    assert.equal(exported.status, 0)
-    const exportEvents = exported.stdout.split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line))
-    const done = exportEvents.find(event => event.type === 'result')
-    assert(done && done.success === true && done.fail_count === 0)
-    const outputPaths = Object.values(done.raw_session_output_paths || done.session_output_paths || {})
-    assert(outputPaths.some(file => fs.readFileSync(file, 'utf8').includes(fixture.message)))
-    console.log('Native application binding, encrypted session/message reads, image decrypt and successful synthetic JSONL export passed.')
+    console.log('Native application binding, encrypted session/message reads, image decrypt and source HTML export passed.')
     console.log('Real-account key acquisition and real-account chat export are not tested by this check.')
   } finally {
-    try { fs.rmSync(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }) }
+    try { await require('node:fs/promises').rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }) }
     catch (error) { console.warn('Temporary cleanup failed:', String(error)) }
   }
 }

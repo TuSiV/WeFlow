@@ -21,16 +21,16 @@ jobs:
         run: npm ci --legacy-peer-deps
       - name: Download pinned native bundle
         run: npm run components:install -- win32-x64
-      - name: Check native runtime with synthetic inputs
-        run: |
-          npm run components:test
-          npm run components:test:windows
       - name: Check types and build desktop application
         run: |
           npm version "5.0.0-wcdb-compat.${{ github.run_number }}" --no-git-tag-version --ignore-scripts
           npm run typecheck
           node scripts/clean-dist-electron.cjs
           npx vite build
+      - name: Check native runtime and application export
+        run: |
+          npm run components:test
+          npm run components:test:windows
       - name: Package Windows x64 installer
         run: npx electron-builder --win nsis --x64 --publish never
         env:

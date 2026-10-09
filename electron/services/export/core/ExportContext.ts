@@ -4616,14 +4616,7 @@ export class ExportContext {
             endTime
           )
           if (!cursor.success || !cursor.cursor) {
-            console.error(`[Export] 打开游标失败: ${cursor.error || '未知错误'}`)
-            return {
-              rows,
-              memberSet,
-              firstTime,
-              lastTime,
-              error: cursor.error || '打开消息游标失败'
-            }
+            throw new Error(`打开消息游标失败: ${cursor.error || '未知错误'}`)
           }
 
           try {
@@ -4635,11 +4628,10 @@ export class ExportContext {
               batchCount++
               
               if (!batch.success) {
-                console.error(`[Export] 获取批次 ${batchCount} 失败: ${batch.error}`)
-                break
+                throw new Error(`获取消息批次 ${batchCount} 失败: ${batch.error || '未知错误'}`)
               }
               
-              if (!batch.rows) break
+              if (!Array.isArray(batch.rows)) throw new Error('消息批次没有有效的行数组')
               
               let rowIndex = 0
               for (const row of batch.rows) {
@@ -4856,9 +4848,6 @@ export class ExportContext {
               hasMore = batch.hasMore === true
             }
             
-          } catch (err) {
-            if (this.isStopError(err)) throw err
-            console.error(`[Export] 收集消息异常:`, err)
           } finally {
             try {
               await wcdbService.closeMessageCursor(cursor.cursor)

@@ -1,22 +1,27 @@
-# Windows x64 原生组件配置与验证状态
+# Windows x64 原生组件与导出验证
 
-**已加入仅匹配固定 DLL 的到期日期兼容修复。Windows 实际 Electron 初始化、模拟加密会话和消息读取、模拟图片解密已通过；导出引擎另有到期检查，修复后验证进行中。真实账号导出未验证。**
+已修复固定数据库库的到期初始化失败。Windows 实际 Electron 初始化、模拟加密会话和消息读取、模拟图片解密已通过。正在验证实际 exportWorker 的源码 HTML 导出与安装包；真实微信账号导出未验证。
 
-## 已配置
+## 默认组件与导出路径
 
-- 固定组件来源为 Panther114/Weport 提交 `3b9e2afd341f0eef56d4be9dafca25c8fe8be533`，大小及 Git blob SHA-1 记录于 `shared/native-components.json`。
-- Windows x64 清单包含 WCDB、媒体解密插件、WeLive 引擎及 `wx_key.dll`，共 8 个文件。
-- 数据库库、媒体插件、导出引擎在设置留空时解析随包路径；加载前检查组件及同目录依赖的完整性。显式填写的外部路径优先，不静默替换。
-- 密钥工具留空时使用移植的 Windows 密钥源码适配器。仅在用户发起密钥获取时调用；指定外部工具时仍使用原协议。适配器不自动关闭或重启微信。
-- 构建后的更新源指向 TuSiV/WeFlow，避免更新覆盖本分支配置。
-- 下载文件不提交到 Git；Windows 构建时下载固定组件并放入安装包。
-- 旧引擎未返回清单时，适配器读取实际 JSONL，验证每行 JSON、统计行数和字节数及已报告的媒体错误；拒绝导出目录外路径和读取中变化的文件。文件清单不能证明原始聊天没有漏导。
+- 固定组件来源为 Panther114/Weport 提交 `3b9e2afd341f0eef56d4be9dafca25c8fe8be533`。清单记录原始与派生文件的大小、Git blob SHA。
+- 默认安装五个 Windows x64 文件：`wx_key.dll`、WCDB.dll、SDL2.dll、wcdb_api.dll 和图片解密 `.node`。
+- 设置留空时使用已校验的随包数据库与媒体组件；密钥工具留空使用随包源码适配器。显式外部路径优先。
+- 没有显式 WeLive 路径时，exportWorker 使用项目现有源码的数据库游标及格式化器。支持原有 HTML、JSON、TXT 等格式。游标打开、批次读取失败或无有效行数组时抛错，原子写入不会将部分文件当成成功导出。
+- WeLive EXE 及其内置通信 DLL 报告固定日期到期。自动路径通过 runtimeBlocks 禁用，安装清单和打包过滤排除其文件；不修改、执行或发布该通信 DLL。外部可选引擎仍保留原协议与清单验证。
+- 更新源指向 TuSiV/WeFlow，避免更新覆盖本分支配置。
 
-## 来源与修改
+## 数据库到期修复
 
-`electron/services/bundledWindowsKeyService.ts` 改编自固定来源提交的 `electron/services/keyService.ts`。修改包括：仅通过校验后的随包路径加载密钥 DLL；内联同提交的账号目录后缀处理函数；接入当前 KeyProviderService 的回退入口。历史验证注释属于上游记录，不代表本分支已验证真实账号。
+2026-10-09 Windows 的完整 Electron 测试返回 `wcdb_init = -1000`，诊断为 `expired: self-destruct triggered`。修复参考 Dinnerb0ne2/WeFlow-WCDB-Patch 提交 `cbcfcf4d344d4e9c477ba9c12063594af68a5025` 的 DETAILS.md，两个指令位置经独立反汇编核对。
 
-原作者为 cc / hicccc77 和 WeFlow contributors；Weport 修改作者为 Panther114 和 Weport contributors。随包保存来源的 LICENSE、NOTICE、THIRD-PARTY-NOTICES，以及 WCDB、SDL2、Koffi 许可证，见 `resources/native-licenses/`。派生源码遵循 CC BY-NC-SA 4.0；第三方组件保留各自许可证。
+只接受原文件 SHA-256 `6397760da70de8062829fbe6a2ec01cf0616d6f2b334e6fe54873898f38f7ad7`。文件偏移 `0x80dc5` 将 `7e0a` 改为 `eb0a`；`0xe85d7` 将 `0f8e30010000` 改为 `e93101000090`。保持指令长度和跳转目标，不修改系统时间或账户数据库。输出 SHA-256 必须为 `1536606b1b1b2a0dc9de631a7f45504f5d466de0979e50b3f94548ae124993d0`。
+
+安装前验证原始文件大小和 Git blob；转换后验证派生文件大小、Git blob 和 SHA-256。运行时只接受派生文件，并验证同目录依赖。此修复不是重新构建原生库，也不是对其余行为的全面审计。
+
+## WeLive 状态
+
+实际测试中，WeLive EXE 返回 `error: this build has expired`；随后其内部通信库返回 `native transport challenge failed with status -101`。自动审批拒绝了改写通信 DLL 的持久变更，理由为安全或授权检查弱化。该项变更未写入分支；本版本改用已有源码的直接导出流程，不加载或分发这些二进制。
 
 ## 命令
 
@@ -26,37 +31,16 @@ npm run components:install -- win32-x64
 npm run components:check -- win32-x64
 npm run components:test
 npm run typecheck
-# 以下命令需要 Windows x64
-npm run components:test:windows
 npx vite build
+# 以下检查需要 Windows x64，且先完成上面的 build
+npm run components:test:windows
 npx electron-builder --win nsis --x64 --publish never
 ```
 
-使用已有锁文件。`--legacy-peer-deps` 解决 ansi-to-react 等依赖与 React 19 的 peer 范围冲突，不代表这些依赖的运行行为已验证。
+Windows 工作流仅在原生读取、源码 HTML 导出、类型检查、生产构建和打包全部通过后发布预发布 EXE，附 SHA-256 校验文件。
 
-## 验证层级
+## 验证范围
 
-- 文件完整性：已验证 8 个 Windows x64 组件。
-- 路径与加载前校验：开发路径、打包路径、不支持的平台、依赖被修改、文件缺失场景检查通过。
-- 类型检查和 Vite 构建：本地通过。
-- Windows 原生运行：由 Windows native configuration check 工作流测试 WCDB 初始化、密钥 DLL 符号、模拟图片解密及 WeLive 缺失数据库的 NDJSON 失败响应；通过后构建测试 EXE，保存为 Actions artifact。
-- 真实聊天导出：尚未验证。模拟测试不证明密钥正确、消息和附件完整或多年记录导出可用。
+模拟数据含一位假联系人和一条假文本消息，无用户记录。组件测试涵盖原始/派生哈希、幂等转换、拒绝篡改、开发/打包路径及缺少依赖。真实密钥获取、多年记录及附件的完整性仍需真实账户副本验证。
 
-Windows 工作流仅在所有组件检查、类型检查、构建和打包通过后发布预发布安装包，并附 SHA-256 校验文件。真实聊天应先在数据库副本上导出，核对消息数量、发送人、时间及图片附件。
-
-## 到期日期修复及验证限制
-
-2026-10-09 的 Windows x64 完整 Electron 应用测试实际返回 `wcdb_init = -1000`，诊断日志为 `wcdb_init [SecurityStatus:0]` 和 `expired: self-destruct triggered`。测试在创建或打开任何聊天数据库之前停止，没有证明或观察到数据库被修改。日志证明该测试环境下初始化失败并报告过期；不能据此推断对所有用户的行为。
-
-修复参考 Dinnerb0ne2/WeFlow-WCDB-Patch 的 DETAILS.md，两个分支经本分支反汇编独立核对。只接受原文件 SHA-256 `6397760da70de8062829fbe6a2ec01cf0616d6f2b334e6fe54873898f38f7ad7`，在文件偏移 `0x80dc5` 将 `7e0a` 改为 `eb0a`，在 `0xe85d7` 将 `0f8e30010000` 改为 `e93101000090`。保持长度及跳转目标不变，不调整系统时间。输出 SHA-256 必须为 `1536606b1b1b2a0dc9de631a7f45504f5d466de0979e50b3f94548ae124993d0`。
-
-安装脚本先验证固定来源原始文件的大小及 Git blob，再应用转换，最后验证派生文件的大小、Git blob 和 SHA-256。运行时只接受派生文件；过期原文件不能通过运行时校验。不修改用户提供的外部 DLL 或聊天数据库。此修复没有重建原生库，也不代表对库内其余行为完成审计。
-WCDB 二进制仍包含 `api.weflow.top`、`expired: self-destruct triggered`、`??DATA_CORRUPTED_BY_PIRACY_PROTECTION??` 字符串。配置适配未消除或审计这些行为，文件哈希不证明行为安全。当前没有该包装库和引擎的可重建源码，不能宣称已得到可审计、只读的证据提取实现。
-
-Windows ARM64、macOS、Linux 仍为外部组件模式，本次没有补齐其自动密钥获取链路。
-
-### 导出引擎到期修复
-
-2026-10-09 Windows 测试中，WeLive 在读取请求之前以退出码 1 返回 `error: this build has expired`。独立反汇编定位：主入口调用 `GetSystemTimePreciseAsFileTime`，与 FILETIME `0x1dd2105a3f0c000`（2026-07-31 16:00:00 UTC）比较后，以 `jge` 进入该退出路径。构建转换只将文件偏移 `0xf249c` 的 `0f8dac130000` 改为六个 `90`（NOP）；系统时间有效性检查和 CLI 处理保留。
-
-只接受原文件 SHA-256 `1c73c5cf710468f6bc400f5eb4680e1eeab149dabdba83852f493f4c5ef07bcf`，输出必须为 `62a472e7564b95f5c992db6e7e94d637ba64fd8d6696517191106b49ca9f5e33`。与 DLL 一样，下载前后和运行加载前分别验证源与派生文件。未修改 WeLive 内部的另一份 WCDB 包装 DLL。
+来源及第三方许可证见 resources/native-licenses/。密钥源码适配器改编自固定 Weport 提交的 keyService.ts；派生代码遵循 CC BY-NC-SA 4.0，第三方组件保留其许可证。Windows ARM64、macOS、Linux 本次仍为外部组件模式。

@@ -310,7 +310,7 @@ const recordNewDirectoryTreeEntries = (before: DirectoryTreeSnapshot) => {
   }
 }
 
-async function runWeliveEngine() {
+async function runExportEngine() {
   const path = require('path') as typeof import('path')
   const fs = require('fs') as typeof import('fs')
   const os = require('os') as typeof import('os')
@@ -347,7 +347,9 @@ async function runWeliveEngine() {
   const effectiveOptions = exportService.context.isMediaContentBatchExport(normalizedOptions)
     ? { ...normalizedOptions, exportVoiceAsText: false }
     : normalizedOptions
-  await exportService.context.ensureConnected().catch(() => null)
+  const useWelive = Boolean(String(config.welivePath || '').trim())
+  const connection = await exportService.context.ensureConnected().catch(error => ({ success: false, error: String(error) }))
+  if (!useWelive && !connection?.success) throw new Error(connection?.error || '数据库连接失败')
   const exportMediaEnabled = exportService.context.isMediaExportEnabled(effectiveOptions)
   const writeLayout = exportService.context.resolveExportWriteLayout(effectiveOptions)
   const exportBaseDir = writeLayout === 'A'
@@ -428,7 +430,7 @@ async function runWeliveEngine() {
   // 媒体导出需要每个会话独立的 mediaDir，仍维持单会话进程。
   const WELIVE_TEXT_SESSION_CHUNK_SIZE = 100
   const rawChunkSize = exportMediaEnabled ? 1 : WELIVE_TEXT_SESSION_CHUNK_SIZE
-  for (let chunkStart = 0; chunkStart < sessionIds.length; chunkStart += rawChunkSize) {
+  for (let chunkStart = 0; useWelive && chunkStart < sessionIds.length; chunkStart += rawChunkSize) {
     const chunkSessionIds = sessionIds.slice(chunkStart, chunkStart + rawChunkSize)
     const firstChunkSessionId = chunkSessionIds[0] || ''
     const result = await runWeliveExport({
@@ -534,8 +536,11 @@ async function runWeliveEngine() {
     }
   }
 
-  const rawSuccessSessionIds = sessionIds.filter((sessionId) => Boolean(rawSessionOutputPaths[sessionId]))
-  const rawSessionStats = Object.fromEntries(rawSuccessSessionIds.map((sessionId) => {
+  // With no external engine, use the existing source cursor/formatter pipeline.
+  const rawSuccessSessionIds = useWelive
+    ? sessionIds.filter((sessionId) => Boolean(rawSessionOutputPaths[sessionId]))
+    : sessionIds
+  const rawSessionStats = Object.fromEntries(Object.keys(rawExportManifests).map((sessionId) => {
     const manifest = rawExportManifests[sessionId]
     return [sessionId, {
       rows: Number(manifest?.rows || 0),
@@ -706,7 +711,7 @@ async function run() {
     return
   }
 
-  const result = await runWeliveEngine()
+  const result = await runExportEngine()
   flushProgress()
   flushCreatedPaths()
   parentPort?.postMessage({

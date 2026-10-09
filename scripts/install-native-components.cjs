@@ -2,16 +2,14 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 const crypto = require('node:crypto')
 const manifest = require('../shared/native-components.json')
-const transforms = {
-  'wcdb-date-compat-v1': require('./wcdb-date-compat.cjs').applyDateCompatibility,
-  'welive-date-compat-v1': require('./welive-date-compat.cjs').applyDateCompatibility
-}
+const transforms = { 'wcdb-date-compat-v1': require('./wcdb-date-compat.cjs').applyDateCompatibility }
 const root = path.resolve(__dirname, '..')
 
 function selectFiles(target) {
   const paths = manifest.platforms[target]
   if (!paths) throw new Error(`Unsupported target: ${target}`)
-  const dirs = Object.values(paths).map(p => path.posix.dirname(p) + '/')
+  const blocks = manifest.runtimeBlocks?.[target] || {}
+  const dirs = Object.entries(paths).filter(([key]) => !blocks[key]).map(([, p]) => path.posix.dirname(p) + '/')
   return manifest.files.filter(f => dirs.some(d => f.path.startsWith(d)))
 }
 

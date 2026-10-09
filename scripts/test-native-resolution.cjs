@@ -32,8 +32,8 @@ try {
   const packaged = resolver(temporary, 'win32', path.join(temporary, 'app.asar/dist-electron'))
   for (const key of keys) assert.equal(packaged(key), manifest.runtimeBlocks?.['win32-x64']?.[key]
     ? null : path.join(temporary, manifest.platforms['win32-x64'][key]))
-  fs.appendFileSync(path.join(temporary, 'resources/welive/win32/x64/resources/win32/x64/WCDB.dll'), 'tampered')
-  assert.equal(packaged('welivePath'), null, 'Reject a modified engine dependency before loading')
+  fs.appendFileSync(path.join(temporary, 'resources/wcdb/win32/x64/WCDB.dll'), 'tampered')
+  assert.equal(packaged('wcdbLibPath'), null, 'Reject a modified database dependency before loading')
   fs.rmSync(path.join(temporary, 'resources/key/win32/x64/wx_key.dll'))
   assert.equal(packaged('keyDllPath'), null, 'Missing bundle must not resolve')
   console.log('Development/packaged resolution, unsupported platform, tampered dependency and missing component checks passed.')

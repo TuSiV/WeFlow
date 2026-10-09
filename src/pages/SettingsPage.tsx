@@ -2658,7 +2658,7 @@ function SettingsPage({ onClose }: SettingsPageProps = {}) {
       <div className="form-group">
         <label>第三方组件路径</label>
         <span className="form-hint">
-          Windows x64 自动配置已校验的数据库、媒体和导出组件。密钥工具留空使用随包适配器。
+          Windows x64 自动配置已校验的数据库和媒体组件，默认使用应用内置的导出流程。密钥工具留空使用随包适配器；WeLive 路径仅用于自备的外部引擎。
         </span>
       </div>
 
@@ -2711,11 +2711,11 @@ function SettingsPage({ onClose }: SettingsPageProps = {}) {
       </div>
 
       <div className="form-group">
-        <label>WeLive 导出引擎路径</label>
-        <span className="form-hint">用于批量原始导出的外部可执行文件</span>
+        <label>外部 WeLive 导出引擎路径（可选）</label>
+        <span className="form-hint">仅在自行选择外部批量导出引擎时填写</span>
         <input
           type="text"
-          placeholder="未配置"
+          placeholder="留空使用应用内置导出流程"
           value={welivePath}
           onChange={(e) => {
             const value = e.target.value

@@ -18,6 +18,6 @@ used to diagnose the difference between raw and passphrase key APIs. Full encryp
 base64 entry.
 
 Windows checks use the actual WcdbCore application adapter to open the account
-and read the fake session/message, then exercise WeLive's JSONL export. These
+and read the fake session/message, then exercise the actual application exportWorker HTML formatter. These
 checks cannot validate extraction from a live WeChat process or the coverage of
 months/years of records and attachments.
