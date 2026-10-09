@@ -35,7 +35,8 @@ async function main() {
   // Bind only: do not attach to or restart any process in CI.
   const addon = require(path.join(root, 'resources/wedecrypt/win32/x64/weflow-image-native-win32-x64.node'))
   assert.equal(typeof addon.decryptDatNative, 'function')
-  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'weflow-native-'))
+  const temporary = process.env.WEFLOW_NATIVE_TEST_TEMP
+  assert(temporary, 'The parent test runner must provide a temporary directory')
   try {
     const fixture = require('./fixtures/windows-wcdb-passphrase.json')
     const accountDir = path.join(temporary, 'synthetic_me')
@@ -117,19 +118,24 @@ async function main() {
     console.log('Native application binding, encrypted session/message reads, image decrypt and source HTML export passed.')
     console.log('Real-account key acquisition and real-account chat export are not tested by this check.')
   } finally {
-    try { await require('node:fs/promises').rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }) }
-    catch (error) { console.warn('Temporary cleanup failed:', String(error)) }
+    // The parent removes fixtures after this native host exits and releases
+    // all database/log handles. Async file cleanup in this host can stall.
+    console.log('Native assertions completed; fixture cleanup delegated to parent.')
   }
 }
 if (!process.versions.electron) {
   // Use the application's actual host/ABI, rather than plain node.exe.
   const environment = { ...process.env }
   delete environment.ELECTRON_RUN_AS_NODE
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'weflow-native-'))
+  environment.WEFLOW_NATIVE_TEST_TEMP = temporary
   const child = spawnSync(require('electron'), [__filename], {
     env: environment, stdio: 'inherit', timeout: 60000
   })
   if (child.error) console.error(child.error)
   process.exitCode = child.status ?? 1
+  try { fs.rmSync(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }) }
+  catch (error) { console.warn('Temporary cleanup failed:', String(error)) }
 } else {
   const { app } = require('electron')
   // This headless test has no application lifecycle to close. Exit the test
