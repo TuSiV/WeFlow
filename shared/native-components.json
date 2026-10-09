@@ -3,11 +3,7 @@
     "repository": "Panther114/Weport",
     "commit": "3b9e2afd341f0eef56d4be9dafca25c8fe8be533"
   },
-  "runtimeBlocks": {
-    "win32-x64": {
-      "wcdbLibPath": "Windows Electron check returned -1000 and logged expired: self-destruct triggered on 2026-10-09"
-    }
-  },
+  "runtimeBlocks": {},
   "files": [
     {
       "path": "resources/key/win32/x64/wx_key.dll",
@@ -51,8 +47,10 @@
     },
     {
       "path": "resources/wcdb/win32/x64/wcdb_api.dll",
-      "gitBlobSha": "8842616a449f7725e0b8d9da479ad33708a42e22",
-      "size": 1387008
+      "gitBlobSha": "02e78fd6fa4ac3d16fb0a58f2874bf46cef2fc0f",
+      "size": 1387008,
+      "sourceGitBlobSha": "8842616a449f7725e0b8d9da479ad33708a42e22",
+      "transform": "wcdb-date-compat-v1"
     },
     {
       "path": "resources/wedecrypt/linux/x64/weflow-image-native-linux-x64.node",

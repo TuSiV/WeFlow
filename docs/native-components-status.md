@@ -1,6 +1,6 @@
 # Windows x64 原生组件配置与验证状态
 
-**当前阻碍：随包数据库库实际运行报告过期，已禁用自动加载。配置代码已补齐，但完整导出链路未通过验证，尚无 EXE 或 Release。**
+**已加入仅匹配固定 DLL 的到期日期兼容修复。Windows 实际运行验证待完成；真实账号导出未验证。**
 
 ## 已配置
 
@@ -42,14 +42,15 @@ npx electron-builder --win nsis --x64 --publish never
 - Windows 原生运行：由 Windows native configuration check 工作流测试 WCDB 初始化、密钥 DLL 符号、模拟图片解密及 WeLive 缺失数据库的 NDJSON 失败响应；通过后构建测试 EXE，保存为 Actions artifact。
 - 真实聊天导出：尚未验证。模拟测试不证明密钥正确、消息和附件完整或多年记录导出可用。
 
-Windows 工作流不发布正式 Release。需要先在数据库副本上成功导出，核对消息数量、发送人、时间及图片附件，再满足发布条件。
+通过 Windows 组件测试和打包后可提供预发布安装包。真实聊天应先在数据库副本上导出，核对消息数量、发送人、时间及图片附件。
 
-## 已知未解决事项
+## 到期日期修复及验证限制
 
 2026-10-09 的 Windows x64 完整 Electron 应用测试实际返回 `wcdb_init = -1000`，诊断日志为 `wcdb_init [SecurityStatus:0]` 和 `expired: self-destruct triggered`。测试在创建或打开任何聊天数据库之前停止，没有证明或观察到数据库被修改。日志证明该测试环境下初始化失败并报告过期；不能据此推断对所有用户的行为。
 
-因此 `runtimeBlocks.win32-x64.wcdbLibPath` 禁用了这组已知失败的随包数据库库自动加载。现有密钥适配、媒体路径、旧引擎清单适配及构建配置保留，但不能宣称完整读取导出链路已经可用。需要替换为兼容且可验证的数据库组件；当前没有其可重建源码，不能通过配置修复库内部的过期状态。Windows 安装包及 Release 未生成。
+修复参考 Dinnerb0ne2/WeFlow-WCDB-Patch 的 DETAILS.md，两个分支经本分支反汇编独立核对。只接受原文件 SHA-256 `6397760da70de8062829fbe6a2ec01cf0616d6f2b334e6fe54873898f38f7ad7`，在文件偏移 `0x80dc5` 将 `7e0a` 改为 `eb0a`，在 `0xe85d7` 将 `0f8e30010000` 改为 `e93101000090`。保持长度及跳转目标不变，不调整系统时间。输出 SHA-256 必须为 `1536606b1b1b2a0dc9de631a7f45504f5d466de0979e50b3f94548ae124993d0`。
 
+安装脚本先验证固定来源原始文件的大小及 Git blob，再应用转换，最后验证派生文件的大小、Git blob 和 SHA-256。运行时只接受派生文件；过期原文件不能通过运行时校验。不修改用户提供的外部 DLL 或聊天数据库。此修复没有重建原生库，也不代表对库内其余行为完成审计。
 WCDB 二进制仍包含 `api.weflow.top`、`expired: self-destruct triggered`、`??DATA_CORRUPTED_BY_PIRACY_PROTECTION??` 字符串。配置适配未消除或审计这些行为，文件哈希不证明行为安全。当前没有该包装库和引擎的可重建源码，不能宣称已得到可审计、只读的证据提取实现。
 
 Windows ARM64、macOS、Linux 仍为外部组件模式，本次没有补齐其自动密钥获取链路。

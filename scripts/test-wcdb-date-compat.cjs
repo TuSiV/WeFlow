@@ -1,0 +1,30 @@
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
+const crypto = require('node:crypto')
+const { applyDateCompatibility, originalSha256, patchedSha256, edits } = require('./wcdb-date-compat.cjs')
+const { verify } = require('./install-native-components.cjs')
+const manifest = require('../shared/native-components.json')
+const file = manifest.files.find(file => file.transform === 'wcdb-date-compat-v1')
+const patched = fs.readFileSync(path.resolve(__dirname, '..', file.path))
+verify(patched, file)
+assert.equal(crypto.createHash('sha256').update(patched).digest('hex'), patchedSha256)
+const original = Buffer.from(patched)
+for (const edit of edits) Buffer.from(edit.before, 'hex').copy(original, edit.offset)
+assert.equal(crypto.createHash('sha256').update(original).digest('hex'), originalSha256)
+verify(original, { ...file, gitBlobSha: file.sourceGitBlobSha })
+assert.throws(() => verify(original, file), /Integrity mismatch/, 'Expired original must not pass runtime integrity checks')
+assert.deepEqual(applyDateCompatibility(original), patched)
+assert.deepEqual(applyDateCompatibility(patched), patched, 'Repeated application is idempotent')
+const tampered = Buffer.from(original)
+tampered[100] ^= 1
+assert.throws(() => applyDateCompatibility(tampered), /SHA-256 mismatch/)
+assert.throws(() => applyDateCompatibility(Buffer.alloc(0)), /SHA-256 mismatch/)
+for (let index = 0; index < original.length; index++) {
+  if (original[index] !== patched[index]) {
+    assert(edits.some(edit => index >= edit.offset && index < edit.offset + edit.before.length / 2))
+  }
+}
+assert.equal(original[0x80dc6], patched[0x80dc6], 'Short jump target stays fixed')
+assert.equal(0xe85d7 + 6 + original.readInt32LE(0xe85d9), 0xe85d7 + 5 + patched.readInt32LE(0xe85d8))
+console.log('Known DLL transformation, exact output hash, fixed jump targets, idempotence and tamper rejection passed.')

@@ -2,6 +2,7 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 const crypto = require('node:crypto')
 const manifest = require('../shared/native-components.json')
+const { applyDateCompatibility } = require('./wcdb-date-compat.cjs')
 const root = path.resolve(__dirname, '..')
 
 function selectFiles(target) {
@@ -29,7 +30,12 @@ async function install(target, checkOnly = false) {
     const url = `https://raw.githubusercontent.com/${manifest.source.repository}/${manifest.source.commit}/${file.path}`
     const response = await fetch(url, { signal: AbortSignal.timeout(120000) })
     if (!response.ok) throw new Error(`Download failed (${response.status}): ${file.path}`)
-    const data = Buffer.from(await response.arrayBuffer())
+    let data = Buffer.from(await response.arrayBuffer())
+    verify(data, { ...file, gitBlobSha: file.sourceGitBlobSha || file.gitBlobSha })
+    if (file.transform) {
+      if (file.transform !== 'wcdb-date-compat-v1') throw new Error(`Unsupported transform: ${file.transform}`)
+      data = applyDateCompatibility(data)
+    }
     verify(data, file)
     await fs.mkdir(path.dirname(destination), { recursive: true })
     const temporary = destination + `.download-${process.pid}`
