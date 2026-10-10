@@ -1,12 +1,10 @@
 # 第三方可插拔组件接口说明
 
-本分支 Windows x64 的随包配置见 [原生组件状态](native-components-status.md)：构建时下载固定组件，留空使用随包路径及 Windows 密钥适配器；显式外部路径优先。其余平台仍按外部组件协议配置。
+本分支 Windows x64 与 Mac arm64 的随包配置见 [组件状态](native-components-status.md)：构建时下载固定来源组件，路径留空使用校验后的数据库、媒体及密钥适配器。Mac 要求 macOS 15+、Apple Silicon；其他平台未验证随包运行。
 
-以下四类外部能力由用户在
-「设置 -> 数据库 -> 第三方组件路径」中自行配置一个可执行文件/动态库/插件路径，
-应用只按下述协议与其交互，不对其来源、签名或实现方式做任何校验。
+以下四类能力可在「设置 -> 数据库 -> 第三方组件路径」中显式配置可执行文件、动态库或插件。显式路径优先，用户负责其来源及可信性；固定随包文件的完整性验证不适用于用户自备实现。
 
-留空或指向的文件不存在时，对应功能会直接返回"未配置"错误，不会有任何降级或替代实现。
+路径留空不再等于“未配置”：支持的平台使用随包实现；WeLive 留空时使用源码消息游标及格式化导出流程。显式配置错误或文件不存在时应修正／清除该配置，不期待静默替换。密钥工具配置非空但不存在时返回外部工具未配置错误；Mac 随包工具缺失或校验失败不视为取钥成功。
 
 ## 1. WCDB 实现（`wcdbLibPath`）
 
@@ -15,8 +13,7 @@
 
 加载流程（见 `electron/services/wcdbCore.ts` 的 `initialize()`）：
 1. `koffi.load(wcdbLibPath)`。
-2. 依次尝试绑定下列导出函数；某个符号不存在时该功能会被跳过（返回 `null`），不影响其余功能。
-   第一个必须存在的函数是 `wcdb_open_account`，其余按需实现即可。
+2. 按 `wcdbCore.ts` 绑定核心及扩展函数；Mac 随包路径先预加载同目录 WCDB 依赖。`wcdb_init`、`wcdb_shutdown`、`wcdb_open_account`、`wcdb_close_account` 等核心绑定并非可选；只有调用点中明确使用容错绑定的扩展函数可以缺失。
 
 完整函数签名列表（`int32` 返回值均为状态码，`0` 表示成功；`_Out_ void** outJson` 类参数
 通过 `wcdb_free_string` 释放调用方分配的字符串内存）：
@@ -119,9 +116,7 @@ void  wcdb_cloud_stop()
 void  VerifyUser(int64 hwnd, const char* message, _Out_ char* outResult, int maxLen)
 ```
 
-`wcdb_open_account` 之外全部可选：缺失的符号对应功能会在应用里表现为"不可用"，不影响
-其他已实现的功能。JSON 载荷/出参的字段命名可参照 `electron/services/wcdbCore.ts` 里
-每个函数调用点前后对返回值的解析逻辑。
+上表是接口参考，不是“只实现 `wcdb_open_account` 即可运行”的最小合同。必须／可选绑定、JSON 字段和出参所有权以 [当前适配器源码](../electron/services/wcdbCore.ts) 的调用点为准。
 
 ## 2. 媒体解密插件（`imageNativeAddonPath`）
 
@@ -149,6 +144,8 @@ void  VerifyUser(int64 hwnd, const char* message, _Out_ char* outResult, int max
 
 ## 3. WeLive 批量导出引擎（`welivePath`）
 
+仅用于用户显式配置的外部实现；本分支不分发已报告到期的 WeLive 通信二进制，默认导出不需要它。
+
 一个可执行文件，由 `electron/services/weliveBridge.ts` 的 `runWeliveExport()` 拉起，
 用于会话的批量原始导出（文本 + 媒体）。协议：
 
@@ -159,3 +156,32 @@ void  VerifyUser(int64 hwnd, const char* message, _Out_ char* outResult, int max
   （含 `success`/`success_count`/`fail_count`/`session_output_paths`/`raw_export_manifests`
   等字段）结束。进程以退出码 `0` 且最后一条事件为 `result` 且 `success !== false` 视为成功。
 - 支持通过关闭 stdin/发送信号来响应取消（`AbortSignal`），进程应能在收到终止信号后尽快退出。
+
+## 4. 外部密钥工具（`keyProviderPath`）
+
+配置后优先于 Windows/Mac 随包密钥工具。适配器启动可执行文件，不附加命令行参数；向 stdin 写入一行 JSON 后关闭 stdin。stdout 输出按行分隔的 JSON（NDJSON），可先输出进度，再输出结果。stderr 不是结果协议。
+
+| `action` | 请求可包含的字段 | 成功结果字段 |
+| --- | --- | --- |
+| `get_db_key` | `dbPath`、`accountId`、`internalDbKeyHex` | `success: true`、`key`；可含 `accountId`、`logs` |
+| `get_image_key` | `accountDir`、`accountId` | `success: true`、`xorKey`、`aesKey`、`verified` |
+| `scan_image_key_memory` | `accountDir` | `success: true`、`xorKey`、`aesKey`、`verified` |
+
+字段可能省略，工具必须检查必需条件，不猜测另一账号。示意请求：
+
+```json
+{"action":"get_db_key","dbPath":"/所选数据根目录","accountId":"所选完整账号目录标识"}
+```
+
+stdout 示例（占位密钥不能连接数据库）：
+
+```json
+{"type":"progress","message":"正在验证所选账号","level":0}
+{"type":"result","success":true,"key":"<64位十六进制数据库密钥>"}
+```
+
+失败使用 `{"type":"result","success":false,"error":"具体失败原因"}`。不要将密钥写入进度、`logs` 或 stderr。结果必须换行结束；进程退出但无有效结果时报告失败。数据库请求使用调用方等待时间（默认 60 秒），图片请求默认 120 秒；超时会终止该子进程。当前适配器接收到结果事件后结算请求，退出码不是唯一成功判据。
+
+引导页验证候选数据库密钥能否打开所选账号，不接受外部返回其他账号 ID 来替换选择。外部图片接口的 `verified` 是工具声明，不等同于已运行随包 Mac 的模板校验。
+
+Mac 随包 `xkey_helper <pid> <timeout_ms>` 和 `image_scan_helper <pid> <ciphertext_hex>` 使用自己的原生 CLI 协议，不能直接填成外部 NDJSON 工具。其适配由 [Mac 服务](../electron/services/bundledMacKeyService.ts) 完成。

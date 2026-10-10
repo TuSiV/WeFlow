@@ -1,4 +1,21 @@
-# Windows x64 原生组件与导出验证
+# 双平台原生组件与导出验证
+
+## 当前已验证发布（2026-10-10）
+
+[5.0.1-preview.3](https://github.com/TuSiV/WeFlow/releases/tag/v5.0.1-preview.3) 使用代码提交 `48707a28fa5dce6925ecbffca15114ac53825337`。[双平台检查与统一发布](https://github.com/TuSiV/WeFlow/actions/runs/38035598988)全部成功：Windows EXE、Mac DMG/ZIP 与 SHA-256 校验文件在同一个 Release。后续文档更新不等于重新验证二进制。
+
+| 平台 | 固定随包组件 | 已验证范围 |
+| --- | --- | --- |
+| Windows x64 | 密钥 DLL、WCDB.dll、SDL2.dll、API DLL、图片 `.node`（5 个文件） | Windows 10+；实际 Electron、加密测试库、图片、HTML/PDF、React 及 NSIS |
+| Mac arm64 | WCDB 与 API dylib、图片 `.node`、密钥 dylib、数据库／图片辅助程序（6 个文件） | macOS 15+、M 系列；原生运行、辅助程序无效 PID 拒绝、模拟取钥验证、导出、包内资源／签名检查；未公证 |
+
+Intel Mac、Windows ARM64、Linux 不在当前已验证随包发布范围。真实微信取钥、多年记录及附件完整性未验证；模拟授权流程不等于真实系统弹窗操作已验证。
+
+操作见 [使用指南](USER-GUIDE.md)，排错见 [故障排查](TROUBLESHOOTING.md)，命令、流程及验证层次见 [TESTING.md](TESTING.md)。
+
+## 历史 Windows 验证基线
+
+以下 `5.0.0-wcdb-compat.18` 及其提交／校验值保留历史记录，不是当前推荐下载版本。
 
 已修复固定数据库库的到期初始化失败。Windows 实际 Electron 初始化、模拟加密会话和消息读取、模拟图片解密、实际 exportWorker 的源码 HTML/PDF 导出、精确消息选择、完整分页、实际 React 导出配置与账号选择、类型检查、生产构建和 NSIS 打包全部通过；真实微信账号导出未验证。
 
@@ -55,7 +72,7 @@ npm run components:test:windows
 npx electron-builder --win nsis --x64 --publish never
 ```
 
-Windows 工作流仅在原生读取、源码 HTML 导出、类型检查、生产构建和打包全部通过后发布预发布 EXE，附 SHA-256 校验文件。
+上述为 Windows 本机检查命令。当前 `desktop-release.yml` 等待双平台全部成功，校验三个安装包后一次性公开预发布版本；单平台工作流仅保留手动检查。Mac 命令和双平台门槛见 [TESTING.md](TESTING.md)。
 
 ## 验证范围
 
@@ -66,3 +83,11 @@ Windows 工作流仅在原生读取、源码 HTML 导出、类型检查、生产
 ## Mac 内置密钥获取
 
 新增 `bundledMacKeyService.ts`：外部工具显式配置仍优先，否则使用随包 `xkey_helper`；仅针对唯一微信主进程，候选密钥必须通过所选账号数据库验证。权限拒绝可取消或选择系统授权重试一次；不改 SIP、微信签名或系统调试设置。图片优先从所选账号 kvcomm 缓存推导并用 V2 图片模板验证，不返回无模板猜测结果。原生工具和许可证来源固定，具体微信版本取钥成功不能由 CI 模拟数据推断。
+
+最新 Mac CI 实际加载密钥库符号、执行两个辅助程序拒绝无效 PID；模拟捕获结果通过实际加密库验证，并拒绝错误密钥／账号，覆盖授权取消及一次重试。打包后重跑同类检查；没有附加真实微信进程。
+
+## Mac 日期兼容及 PDF 字体
+
+固定 Mac API 库在 CI 中返回到期初始化失败；仅转换已知输入的两条日期分支、保持跳转目标，更新相关代码页的既有 ad-hoc 签名哈希。宿主与数据库密钥检查保留，错误密钥拒绝测试通过。哈希和范围见 [Mac 修改说明](../resources/native-licenses/WCDB-MACOS-DATE-COMPAT-NOTICE.md)。
+
+PDF 使用随包 Noto 字体，避开本次 Mac 系统字体导致正文不可提取的结果。CJK 兼容字符的核对范围见 [TESTING.md](TESTING.md)，不保证所有阅读器精确搜索行为一致。

@@ -19,7 +19,16 @@
 </p>
 
 > [!TIP]
-> 需要配套的第三方可插拔组件（本项目依赖自定义的原生解密组件，需自行设计，见 [docs/third-party-components.md](docs/third-party-components.md)）
+> 本分支 `components/pinned-installer` 提供已配置原生组件的 Windows x64 / Mac Apple Silicon 桌面安装包，不需要另行设计解密组件。上方徽章、贡献者及联系方式保留原项目信息；本分支安装包请从 [TuSiV/WeFlow Releases](https://github.com/TuSiV/WeFlow/releases) 下载。
+
+## 本分支快速入口
+
+- 已验证发布：[5.0.1-preview.3](https://github.com/TuSiV/WeFlow/releases/tag/v5.0.1-preview.3)，同一 Release 提供 Windows EXE、Mac DMG/ZIP 与 SHA-256 校验文件。
+- [使用指南](docs/USER-GUIDE.md)：安装、选择账号、密钥配置、完整聊天 PDF 与选定消息导出。
+- [故障排查](docs/TROUBLESHOOTING.md)：权限拒绝、密钥不匹配、图片模板及旧数据布局。
+- [组件与验证状态](docs/native-components-status.md) · [测试与发布](docs/TESTING.md) · [外部组件接口](docs/third-party-components.md) · [来源与修改说明](docs/LEGAL-PROVENANCE.md)。
+
+本分支验证了原生组件、模拟加密数据库、HTML/PDF 导出及界面流程；未验证真实微信进程取钥成功、多年真实记录及附件的完整性。Mac 内置取钥工具不代表所有微信版本允许进程访问。
 
 
 ## 主要功能
@@ -28,7 +37,8 @@
 - 朋友圈图片、视频、**实况**的预览和解密
 - 统计分析与群聊画像
 - 年度报告与可视化概览
-- 导出聊天记录为 HTML 等格式
+- 导出聊天记录为 A4 分页 PDF、HTML 等格式，支持只导出勾选消息
+- 自动扫描本机账号目录并选择，自动获取的密钥需通过所选账号验证
 - HTTP API 接口（面向开发者）
 - 查看完整能力清单：[详细功能](#详细功能清单)
 
@@ -37,8 +47,10 @@
 | 平台 | 设备/架构 | 安装包 |
 |------|----------|--------|
 | Windows | Windows10+、x64 | `.exe` |
-| macOS | Apple Silicon（M 系列，arm64） | `.dmg` |
-| Linux | x64 设备（amd64） | `.AppImage`、`.tar.gz` |
+| macOS | macOS 15+、Apple Silicon（M 系列，arm64） | `.dmg`、`.zip`；ad-hoc 签名，未公证 |
+| Linux | 上游有相关代码；本分支未验证随包运行 | 当前统一 Release 不提供安装包 |
+
+Intel Mac、Windows ARM64 不在本分支已验证发布范围。支持新版 `db_storage/session` 数据布局，旧版 `Msg/MicroMsg.db` 布局会标为不支持。原有功能清单不等于本分支对所有功能做过实机验证。
 
 
 ## 详细功能清单
@@ -52,7 +64,7 @@
 | **群聊分析** | 查看群成员详细信息；分析群内发言排行、活跃时段和媒体内容 |
 | **年度报告** | 生成按年统计的年度报告，或跨年度的长期历史报告 |
 | **双人报告** | 选择指定好友，基于双方聊天记录生成专属分析报告 |
-| **消息导出** | 将聊天记录导出为多种格式：JSON、HTML、Markdown、TXT、Excel、CSV、PGSQL、ChatLab专属格式等 |
+| **消息导出** | PDF、JSON、HTML、Markdown、TXT、Excel、CSV、PGSQL、ChatLab 等；可导出完整会话或仅勾选消息，缺失或歧义消息不会扩大为整段导出 |
 | **朋友圈** | 解密朋友圈图片、视频、实况；导出朋友圈内容；拦截朋友圈的删除与隐藏操作； |
 | **联系人** | 导出好友、群聊、公众号信息；找回部分曾经的好友 |
 | **HTTP API 映射** | 将本地消息能力映射为 HTTP API，便于对接外部系统、自动化脚本与二次开发 |
@@ -74,15 +86,21 @@ WeFlow 提供本地 HTTP API 服务，支持通过接口查询消息数据，可
 
 ```bash
 # 1. 克隆项目到本地
-git clone https://github.com/hicccc77/WeFlow.git
+git clone --branch components/pinned-installer https://github.com/TuSiV/WeFlow.git
 cd WeFlow
 
 # 2. 安装项目依赖
-npm install
+npm ci --legacy-peer-deps
 
-# 3. 运行应用（开发模式）
+# 3. 下载并校验本机对应组件（二选一，在相应系统运行）
+npm run components:install -- win32-x64
+# npm run components:install -- darwin-arm64
+
+# 4. 运行应用（开发模式）
 npm run dev
 ```
+
+构建、原生测试、Python PDF 校验及双平台发布步骤见 [TESTING.md](docs/TESTING.md)。显式配置外部组件时，以用户配置为准；正常使用随包组件时保持路径留空。
 
 ## 推广与合作
 

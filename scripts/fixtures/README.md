@@ -1,4 +1,4 @@
-# Synthetic encrypted Windows database fixture
+# Synthetic encrypted desktop database fixture
 
 `windows-wcdb-passphrase.json` contains two generated SQLite databases with only one fake
 friend and one fake text message. It contains no acquired keys or user records.
@@ -17,7 +17,21 @@ SQLCipher 4 page layout. `windows-wcdb.json` preserves the raw-key variant
 used to diagnose the difference between raw and passphrase key APIs. Full encrypted file SHA-256 values are stored with each
 base64 entry.
 
-Windows checks use the actual WcdbCore application adapter to open the account
-and read the fake session/message, then exercise the actual application exportWorker HTML formatter. These
-checks cannot validate extraction from a live WeChat process or the coverage of
-months/years of records and attachments.
+The historical `windows-` filenames are retained; the same passphrase fixture is
+used by actual Windows x64 and macOS arm64 Electron checks. They open the account
+through WcdbCore, read the fake session/message, decrypt a synthetic image, and
+exercise the actual exportWorker for HTML and PDF.
+
+Additional generated messages test all 620 markers across 52 PDF pages, an exact
+first/last subset excluding intermediate messages, and missing selection failure
+with temporary-file cleanup. CJK extracted text is compared with NFKC compatibility
+normalization. Actual React components use synthetic accounts and API responses.
+
+Mac key-adapter tests simulate candidate capture and permission responses, then
+verify candidates against this real encrypted fixture. Actual native key-library
+symbols are loaded, and both shipped helpers reject invalid PID 0; no live process
+is attached. The fixture key is not an acquired user key or real WeChat capture.
+
+These checks do not validate live WeChat extraction or months/years of real records
+and attachments. Commands, evidence and boundaries are in
+[TESTING.md](../../docs/TESTING.md).

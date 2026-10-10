@@ -1,5 +1,10 @@
 # Attribution and Modification Notice
 
+This file retains the upstream Weport attribution. Its historical paths and
+product descriptions are not a list of this branch's shipped artifacts. See the
+[branch provenance inventory](../../docs/LEGAL-PROVENANCE.md) for current paths
+and additions; original author and license statements below remain intact.
+
 Weport is an adapted work based substantially on **WeFlow**, originally created
 by **cc (`hicccc77`) and the WeFlow contributors**.
 

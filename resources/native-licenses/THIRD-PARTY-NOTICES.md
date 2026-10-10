@@ -1,5 +1,11 @@
 # Third-Party Notices
 
+Upstream inventory retained below. Historical `LICENSES/...` and Weport-specific
+paths do not imply identical files are shipped by this branch. Current license
+copies and artifact scope are indexed in
+[branch provenance](../../docs/LEGAL-PROVENANCE.md), including the bundled Noto
+font and Mac key helpers. Original attribution is preserved.
+
 Weport is an adapted work distributed under the Creative Commons
 Attribution-NonCommercial-ShareAlike 4.0 International license. The root
 `LICENSE` and `NOTICE.md` apply to the combined WeFlow/Weport work except where

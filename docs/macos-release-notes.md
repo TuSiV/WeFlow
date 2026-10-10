@@ -1,3 +1,7 @@
+# Mac 平台发布说明
+
+Mac 与 Windows 安装包位于 [同一个预发布 Release](https://github.com/TuSiV/WeFlow/releases/tag/v5.0.1-preview.3)，本文件仅说明 Mac 平台差异。完整操作见 [使用指南](USER-GUIDE.md)，实际验证范围见 [测试说明](TESTING.md)，权限与启动问题见 [故障排查](TROUBLESHOOTING.md)。
+
 Mac 桌面预发布版本，适用于 macOS 15 及以上、Apple Silicon（M 系列芯片、arm64）。提供 DMG 安装包和 ZIP 应用包，不支持 Intel Mac。
 
 包含固定来源并校验的 WCDB 数据库库和图片解密插件，默认使用应用源码消息游标导出，不需要用户另行配置数据库库路径。包含直接 A4 PDF 导出和勾选指定消息导出。PDF 使用随包 Noto 中文字体，支持正文文本提取；字体许可证随包提供。

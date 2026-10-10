@@ -1,3 +1,7 @@
+# 双平台预发布说明
+
+当前已验证版本为 [5.0.1-preview.3](https://github.com/TuSiV/WeFlow/releases/tag/v5.0.1-preview.3)。安装与导出步骤见 [使用指南](USER-GUIDE.md)，测试范围与复现命令见 [测试说明](TESTING.md)，常见错误见 [故障排查](TROUBLESHOOTING.md)。后续版本以对应 Release 和运行记录为准。
+
 Windows 与 Mac 统一预发布版本：同一提交、同一版本号，两个平台各自测试和打包全部通过后才发布。请选择对应系统的安装包：
 
 - Windows x64：Windows-x64-Setup.exe。
