@@ -8,6 +8,8 @@ assert.equal(process.arch, 'arm64')
 const resources = path.resolve('release/mac-arm64/WeFlow.app/Contents/Resources')
 for (const file of selectFiles('darwin-arm64')) verify(fs.readFileSync(path.join(resources, file.path)), file)
 assert(!fs.existsSync(path.join(resources, 'resources/welive')), 'Do not distribute untested WeLive engine')
+const font = 'resources/fonts/annual-report/NotoSerifSC-Var.ttf'
+assert.deepEqual(fs.readFileSync(path.join(resources, font)), fs.readFileSync(font), 'The shipped PDF font must match the tested font')
 const asar = require('@electron/asar')
 for (const file of ['dist-electron/main.js', 'dist-electron/exportWorker.js']) {
   assert.deepEqual(asar.extractFile(path.join(resources, 'app.asar'), file), fs.readFileSync(file), `Shipped code differs: ${file}`)

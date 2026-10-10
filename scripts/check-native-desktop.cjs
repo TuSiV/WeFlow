@@ -12,6 +12,7 @@ async function main() {
   await install(target, true)
   const root = path.resolve(__dirname, '..')
   const nativeRoot = process.env.WEFLOW_NATIVE_RESOURCES || root
+  if (process.env.WEFLOW_NATIVE_RESOURCES) process.resourcesPath = nativeRoot
   const koffi = require('koffi')
   if (process.platform === 'darwin') koffi.load(path.join(nativeRoot, 'resources/wcdb/macos/universal/libWCDB.dylib'))
   const wcdb = koffi.load(path.join(nativeRoot, paths.wcdbLibPath))
