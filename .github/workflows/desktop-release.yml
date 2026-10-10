@@ -1,0 +1,137 @@
+name: Desktop unified release
+
+on:
+  push:
+    branches: ['components/pinned-installer']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RELEASE_VERSION: 5.0.1-preview.${{ github.run_number }}
+
+jobs:
+  windows-x64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Download pinned native bundle
+        run: npm run components:install -- win32-x64
+      - name: Check types and build desktop application
+        run: |
+          npm version "${{ env.RELEASE_VERSION }}" --no-git-tag-version --ignore-scripts
+          npm run typecheck
+          node scripts/clean-dist-electron.cjs
+          npx vite build
+      - name: Install PDF verification tool
+        run: python -m pip install pypdf
+      - name: Check native runtime and application export
+        run: |
+          npm run components:test
+          npm run components:test:windows
+      - name: Package Windows x64 installer
+        run: npx electron-builder --win nsis --x64 --publish never '--config.artifactName=WeFlow-${version}-Windows-x64-Setup.${ext}'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Save test installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: WeFlow-Windows-x64-compat-installer
+          path: release/*.exe
+          if-no-files-found: error
+          retention-days: 14
+
+  macos-arm64:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Download pinned Apple Silicon native bundle
+        run: npm run components:install -- darwin-arm64
+      - name: Verify native architecture and dependencies
+        run: |
+          test "$(uname -m)" = arm64
+          file resources/wcdb/macos/universal/*.dylib resources/wedecrypt/macos/arm64/*.node
+          otool -L resources/wcdb/macos/universal/libwcdb_api.dylib
+          codesign --verify --strict resources/wcdb/macos/universal/libwcdb_api.dylib
+      - name: Check types and build desktop application
+        run: |
+          npm version "${{ env.RELEASE_VERSION }}" --no-git-tag-version --ignore-scripts
+          npm run typecheck
+          node scripts/clean-dist-electron.cjs
+          npx vite build
+      - name: Install PDF verification tool
+        run: python3 -m pip install --break-system-packages pypdf
+      - name: Check native runtime and application export
+        run: |
+          npm run components:test:shared
+          npm run components:test:macos
+      - name: Package Apple Silicon application
+        run: npx electron-builder --mac dmg zip --arm64 --publish never '--config.artifactName=WeFlow-${version}-macOS-arm64.${ext}'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify packaged native resources
+        run: |
+          node scripts/check-packaged-macos.cjs
+          codesign --verify --deep --strict release/mac-arm64/WeFlow.app
+      - name: Save verified Mac installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: WeFlow-macOS-arm64-installers
+          path: |
+            release/*.dmg
+            release/*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  publish-desktop-release:
+    needs: [windows-x64, macos-arm64]
+    if: github.repository == 'TuSiV/WeFlow'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: WeFlow-*
+          path: release
+          merge-multiple: true
+      - name: Publish both verified platforms together
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          RELEASE_TAG="v${RELEASE_VERSION}"
+          cd release
+          shopt -s nullglob
+          installers=( *.exe *.dmg *.zip )
+          test "${#installers[@]}" -eq 3
+          test -f "WeFlow-${RELEASE_VERSION}-Windows-x64-Setup.exe"
+          test -f "WeFlow-${RELEASE_VERSION}-macOS-arm64.dmg"
+          test -f "WeFlow-${RELEASE_VERSION}-macOS-arm64.zip"
+          sha256sum -- "${installers[@]}" > SHA256SUMS.txt
+          sha256sum --check SHA256SUMS.txt
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "WeFlow ${RELEASE_VERSION} — Windows & macOS" \
+              --notes-file ../docs/desktop-release-notes.md --draft --prerelease
+          fi
+          gh release upload "$RELEASE_TAG" "${installers[@]}" SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" --clobber
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets | length' | xargs test 4 -eq
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false

@@ -1,8 +1,6 @@
 name: macOS native configuration check
 
 on:
-  push:
-    branches: ['components/pinned-installer']
   workflow_dispatch:
 
 permissions:
@@ -56,29 +54,3 @@ jobs:
             release/*.zip
           if-no-files-found: error
           retention-days: 14
-
-  publish-macos-prerelease:
-    needs: macos-arm64
-    if: github.repository == 'TuSiV/WeFlow'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v4
-        with:
-          name: WeFlow-macOS-arm64-installers
-          path: release
-      - name: Publish verified Mac installers
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: macos-arm64-${{ github.run_id }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd release
-          sha256sum -- *.dmg *.zip > SHA256SUMS.txt
-          gh release create "$RELEASE_TAG" ./*.dmg ./*.zip SHA256SUMS.txt \
-            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "macOS Apple Silicon preview" \
-            --notes-file ../docs/macos-release-notes.md --prerelease
