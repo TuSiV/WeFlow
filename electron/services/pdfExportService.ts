@@ -1,5 +1,7 @@
 import { BrowserWindow } from 'electron'
-import { promises as fs } from 'fs'
+import { promises as fs, existsSync } from 'fs'
+import { join, resolve } from 'path'
+import { pathToFileURL } from 'url'
 import type { Worker } from 'worker_threads'
 
 // Only the main process owns Chromium. Workers send trusted, generated static HTML.
@@ -21,8 +23,18 @@ export function renderChatPdf(htmlPath: string, pdfPath: string, signal?: AbortS
       await Promise.race([
         (async () => {
           await window.loadFile(htmlPath)
+          const fontRelative = 'resources/fonts/annual-report/NotoSerifSC-Var.ttf'
+          const fontPath = [process.resourcesPath, resolve(__dirname, '..'), resolve(__dirname, '../..')]
+            .filter((root): root is string => Boolean(root))
+            .map(root => join(root, fontRelative)).find(file => existsSync(file))
+          if (!fontPath) throw new Error('PDF 中文字体缺失，请检查安装是否完整')
+          // Some macOS system fonts print as outlines, making every message
+          // unsearchable. Use the already bundled, embeddable Noto font instead.
+          await window.webContents.insertCSS(`@font-face { font-family: WeFlowPdf; src: url(${JSON.stringify(pathToFileURL(fontPath).href)}); font-weight: 100 900; font-display: block; } body { font-family: WeFlowPdf, serif !important; }`)
           await window.webContents.executeJavaScript(`(async () => {
+            await document.fonts.load('14px WeFlowPdf');
             await document.fonts.ready;
+            if (!document.fonts.check('14px WeFlowPdf')) throw new Error('PDF 中文字体加载失败');
             await Promise.all(Array.from(document.images, image => image.complete ? Promise.resolve() :
               new Promise(resolve => { image.onload = resolve; image.onerror = resolve; })));
           })()`)

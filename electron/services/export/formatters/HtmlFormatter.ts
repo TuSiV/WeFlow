@@ -270,7 +270,7 @@ export class HtmlFormatter {
 
       if (isPdf) {
         await writePromise(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8" />
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src file: data:; style-src 'unsafe-inline'; media-src file: data:" />
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src file: data:; font-src file: data:; style-src 'unsafe-inline'; media-src file: data:" />
           <title>${escapeHtml(sessionInfo.displayName)} - 聊天记录</title><style>${htmlStyles}
           :root { color-scheme: light; } body { background: white; color: #111; margin: 0; }
           .page { height: auto; min-height: 0; max-width: none; padding: 0; display: block; }
