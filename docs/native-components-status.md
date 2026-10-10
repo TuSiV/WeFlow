@@ -1,8 +1,16 @@
 # Windows x64 原生组件与导出验证
 
-已修复固定数据库库的到期初始化失败。Windows 实际 Electron 初始化、模拟加密会话和消息读取、模拟图片解密、实际 exportWorker 的源码 HTML 导出、类型检查、生产构建和 NSIS 打包全部通过；真实微信账号导出未验证。
+已修复固定数据库库的到期初始化失败。Windows 实际 Electron 初始化、模拟加密会话和消息读取、模拟图片解密、实际 exportWorker 的源码 HTML/PDF 导出、精确消息选择、完整分页、实际 React 导出配置与账号选择、类型检查、生产构建和 NSIS 打包全部通过；真实微信账号导出未验证。
 
-验证提交：`3539f3bcd537e66e9dd26ddfa08860c4ffae8b84`。[完整 Windows 检查](https://github.com/TuSiV/WeFlow/actions/runs/38014719220)已通过。[预发布安装包](https://github.com/TuSiV/WeFlow/releases/tag/windows-wcdb-compat-38014719220)：`WeFlow-5.0.0-wcdb-compat.14-Setup.exe`，191382032 字节，SHA-256 `ffac3e9a48db3a28f95ec78aeb11dc5b2425526b00c989ac4cdbc3bb432fd76e`，同时提供 `SHA256SUMS.txt`。
+验证提交：`9f539b8f229c6ab0c8fea42d7524776f603feb7b`。[完整 Windows 检查](https://github.com/TuSiV/WeFlow/actions/runs/38018935630)已通过。[预发布安装包](https://github.com/TuSiV/WeFlow/releases/tag/windows-wcdb-compat-38018935630)：`WeFlow-5.0.0-wcdb-compat.18-Setup.exe`，191380506 字节，SHA-256 `e492a1c87e8f00287064bdcfb4b92885719749fb611664622274c6b594e34d0c`，同时提供 `SHA256SUMS.txt`。
+
+## PDF 与选定消息导出
+
+导出配置新增 PDF，直接生成 A4 分页文档，使用完整静态内容而非虚拟滚动。保留消息时间、正文与图片；语音/视频提供文字标识、可用封面及现有附件导出设置，PDF 不播放音视频。
+
+聊天页右键“多选”后勾选消息，底部“导出选定消息”打开配置，默认 PDF，也可切换已有格式。只导出所选标识，忽略全局时间范围，同名保留副本。标识缺失、来源不符、消息已删除或歧义时失败，不扩大导出范围。数据库来源缺失时必须有完整服务器消息 ID 匹配。
+
+Windows 实测：620 条消息跨 52 页逐条提取核验，中文文本保留；仅选首尾两条的 PDF 排除中间消息；实际加密数据库经 exportWorker 和 Electron 主进程生成 PDF；缺失消息拒绝及临时文件清理；实际 React 的 PDF 默认选择、HTML 切换与提交。测试主机在隐藏窗口关闭后保持运行，并由父进程要求全套断言完成标记，避免提前退出被误判为通过。
 
 ## 账号自动扫描与选择
 
@@ -17,7 +25,7 @@
 - 固定组件来源为 Panther114/Weport 提交 `3b9e2afd341f0eef56d4be9dafca25c8fe8be533`。清单记录原始与派生文件的大小、Git blob SHA。
 - 默认安装五个 Windows x64 文件：`wx_key.dll`、WCDB.dll、SDL2.dll、wcdb_api.dll 和图片解密 `.node`。
 - 设置留空时使用已校验的随包数据库与媒体组件；密钥工具留空使用随包源码适配器。显式外部路径优先。
-- 没有显式 WeLive 路径时，exportWorker 使用项目现有源码的数据库游标及格式化器。支持原有 HTML、JSON、TXT 等格式。游标打开、批次读取失败或无有效行数组时抛错，原子写入不会将部分文件当成成功导出。
+- 没有显式 WeLive 路径时，exportWorker 使用项目现有源码的数据库游标及格式化器。支持 PDF、HTML、JSON、TXT 等格式及按消息标识精确导出。游标打开、批次读取失败或无有效行数组时抛错，原子写入不会将部分文件当成成功导出。
 - WeLive EXE 及其内置通信 DLL 报告固定日期到期。自动路径通过 runtimeBlocks 禁用，安装清单和打包过滤排除其文件；不修改、执行或发布该通信 DLL。外部可选引擎仍保留原协议与清单验证。
 - 更新源指向 TuSiV/WeFlow，避免更新覆盖本分支配置。
 
