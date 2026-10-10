@@ -35,7 +35,12 @@ module.exports = async function checkAccountChooser(root, temporary) {
   const file = path.join(temporary, 'account-chooser-test.html')
   fs.writeFileSync(file, `<html><head><meta charset="utf-8"></head><body><div id="root"></div><script>${bundle.replace(/<\/script/gi, '<\\/script')}</script></body></html>`)
   const win = new BrowserWindow({ show: false, width: 1000, height: 900, webPreferences: { nodeIntegration: false, contextIsolation: true } })
-  const run = js => win.webContents.executeJavaScript(js)
+  win.webContents.on('console-message', (_event, _level, message) => console.log('Account chooser renderer:', message))
+  const run = async js => {
+    const value = await win.webContents.executeJavaScript(`(() => { try { return eval(${JSON.stringify(js)}); } catch (error) { return { __failure: String(error), stack: error.stack }; } })()`)
+    if (value && value.__failure) throw new Error(`${value.__failure}; script: ${js}; ${value.stack}`)
+    return value
+  }
   const waitFor = async condition => {
     const deadline = Date.now() + 10000
     while (Date.now() < deadline) {
