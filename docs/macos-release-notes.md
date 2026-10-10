@@ -1,4 +1,4 @@
-Mac 桌面预发布版本，适用于 Apple Silicon（M 系列芯片、arm64）。提供 DMG 安装包和 ZIP 应用包，不支持 Intel Mac。
+Mac 桌面预发布版本，适用于 macOS 15 及以上、Apple Silicon（M 系列芯片、arm64）。提供 DMG 安装包和 ZIP 应用包，不支持 Intel Mac。
 
 包含固定来源并校验的 WCDB 数据库库和图片解密插件，默认使用应用源码消息游标导出，不需要用户另行配置数据库库路径。包含直接 A4 PDF 导出和勾选指定消息导出。
 

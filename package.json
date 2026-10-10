@@ -137,7 +137,8 @@
       "signIgnore": [
         "resources/wcdb/.*",
         "resources/wedecrypt/.*"
-      ]
+      ],
+      "minimumSystemVersion": "15.0.0"
     },
     "win": {
       "target": [
