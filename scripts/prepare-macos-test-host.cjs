@@ -8,7 +8,7 @@ module.exports = function(temporary) {
   const electron = require('electron')
   const source = path.resolve(electron, '../../..')
   const bundle = path.join(temporary, 'WeFlow.app')
-  fs.cpSync(source, bundle, { recursive: true })
+  fs.cpSync(source, bundle, { recursive: true, verbatimSymlinks: true })
   const macos = path.join(bundle, 'Contents', 'MacOS')
   const executable = path.join(macos, 'WeFlow')
   fs.renameSync(path.join(macos, 'Electron'), executable)
@@ -16,6 +16,6 @@ module.exports = function(temporary) {
   for (const [key, value] of Object.entries({ CFBundleExecutable:'WeFlow', CFBundleName:'WeFlow', CFBundleIdentifier:'com.WeFlow.app' })) {
     execFileSync('/usr/bin/plutil', ['-replace', key, '-string', value, info])
   }
-  execFileSync('/usr/bin/codesign', ['--force', '--deep', '--sign', '-', bundle], { stdio:'inherit' })
+  execFileSync('/usr/bin/codesign', ['--force', '--deep', '--sign', '-', '--preserve-metadata=entitlements,flags,runtime', bundle], { stdio:'inherit' })
   return executable
 }
