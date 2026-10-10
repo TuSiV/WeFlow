@@ -26,6 +26,7 @@ jobs:
           test "$(uname -m)" = arm64
           file resources/wcdb/macos/universal/*.dylib resources/wedecrypt/macos/arm64/*.node
           otool -L resources/wcdb/macos/universal/libwcdb_api.dylib
+          codesign --verify --strict resources/wcdb/macos/universal/libwcdb_api.dylib
       - name: Check types and build desktop application
         run: |
           npm version "5.0.0-macos-preview.${{ github.run_number }}" --no-git-tag-version --ignore-scripts

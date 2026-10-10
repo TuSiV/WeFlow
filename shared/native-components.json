@@ -29,8 +29,10 @@
     },
     {
       "path": "resources/wcdb/macos/universal/libwcdb_api.dylib",
-      "gitBlobSha": "2d457d1ceb9f3fc05ae11936195b4385fd6be151",
-      "size": 1502800
+      "gitBlobSha": "9518f3ee822c758a7407be9410effc8efa02c9bc",
+      "size": 1502800,
+      "sourceGitBlobSha": "2d457d1ceb9f3fc05ae11936195b4385fd6be151",
+      "transform": "wcdb-macos-date-compat-v1"
     },
     {
       "path": "resources/wcdb/win32/arm64/WCDB.dll",

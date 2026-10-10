@@ -77,6 +77,10 @@ async function main() {
     core.setLibPath(path.join(nativeRoot, paths.wcdbLibPath))
     assert.equal(await core.initialize(), true, coreModule.exports.getLastDllInitError())
     try {
+      if (process.platform === 'darwin') {
+        assert.equal(await core.open(accountDir, '0'.repeat(64)), false, 'An incorrect database key must remain rejected')
+        console.log('Mac encrypted database rejects an incorrect key.')
+      }
       const opened = await core.open(accountDir, fixture.dbKey)
       if (!opened) {
         const logs = [null]

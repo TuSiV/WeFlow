@@ -27,7 +27,7 @@
     "components:check": "node scripts/install-native-components.cjs --check",
     "components:test": "node scripts/test-wcdb-date-compat.cjs && npm run components:test:shared",
     "components:test:windows": "node scripts/check-native-windows.cjs",
-    "components:test:macos": "node scripts/check-native-macos.cjs",
+    "components:test:macos": "node scripts/test-wcdb-macos-date-compat.cjs && node scripts/check-native-macos.cjs",
     "components:test:shared": "node scripts/test-native-resolution.cjs && node scripts/test-legacy-manifest.cjs && node scripts/test-source-export-failures.cjs && node scripts/test-account-discovery.cjs && node scripts/test-chat-export.cjs"
   },
   "dependencies": {

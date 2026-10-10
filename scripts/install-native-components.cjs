@@ -2,7 +2,10 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 const crypto = require('node:crypto')
 const manifest = require('../shared/native-components.json')
-const transforms = { 'wcdb-date-compat-v1': require('./wcdb-date-compat.cjs').applyDateCompatibility }
+const transforms = {
+  'wcdb-date-compat-v1': require('./wcdb-date-compat.cjs').applyDateCompatibility,
+  'wcdb-macos-date-compat-v1': require('./wcdb-macos-date-compat.cjs').applyDateCompatibility
+}
 const root = path.resolve(__dirname, '..')
 
 function selectFiles(target) {
