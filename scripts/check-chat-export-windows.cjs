@@ -78,7 +78,11 @@ module.exports = async function(root, temporary, workerConfig, selectedRef) {
     await win.webContents.executeJavaScript('[...document.querySelectorAll("button")].find(button => button.textContent.trim() === "开始导出").click()')
     const sent = await win.webContents.executeJavaScript('window.exportedOptions')
     assert.equal(sent.format, 'pdf'); assert.equal(sent.useAllTime, true); assert.equal(sent.dateRange, null)
-    await win.webContents.executeJavaScript('[...document.querySelectorAll(".format-card")].find(button => button.textContent.startsWith("HTML")).click(); [...document.querySelectorAll("button")].find(button => button.textContent.trim() === "开始导出").click()')
+    await win.webContents.executeJavaScript('[...document.querySelectorAll(".format-card")].find(button => button.textContent.startsWith("HTML")).click()')
+    const formatDeadline = Date.now() + 10000
+    while (Date.now() < formatDeadline && !await win.webContents.executeJavaScript('document.querySelector(".format-card.active").textContent.startsWith("HTML")')) await new Promise(resolve => setTimeout(resolve, 50))
+    assert(await win.webContents.executeJavaScript('document.querySelector(".format-card.active").textContent.startsWith("HTML")'))
+    await win.webContents.executeJavaScript('[...document.querySelectorAll("button")].find(button => button.textContent.trim() === "开始导出").click()')
     assert.equal(await win.webContents.executeJavaScript('window.exportedOptions.format'), 'html')
   } finally { win.destroy() }
   console.log('Chat export: all 620 PDF messages across pages, exact subset PDF, actual encrypted WCDB worker PDF, missing-selection failure/cleanup and actual React format selection passed.')
