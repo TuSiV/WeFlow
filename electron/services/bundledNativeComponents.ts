@@ -3,7 +3,7 @@ import { createHash } from 'crypto'
 import { join, resolve } from 'path'
 import manifest from '../../shared/native-components.json'
 
-type ComponentKey = 'wcdbLibPath' | 'imageNativeAddonPath' | 'welivePath' | 'keyDllPath'
+type ComponentKey = 'wcdbLibPath' | 'imageNativeAddonPath' | 'welivePath' | 'keyDllPath' | 'macKeyHelperPath' | 'macImageKeyHelperPath'
 
 /** Resolve verified desktop bundles. Explicit user paths remain overrides. */
 export function resolveBundledComponentPath(key: ComponentKey): string | null {

@@ -1003,7 +1003,7 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
                   </button>
                 </div>
 
-                {isMac && <div className="field-hint">Mac 版暂未内置自动获取密钥工具。请填写该账号的数据库密钥；如已在设置中配置外部密钥工具，可点击自动获取。图片密钥也需手动填写或由外部工具提供。</div>}
+                {isMac && <div className="field-hint">Mac 版已内置密钥获取工具。请保持微信打开；获取结果将验证所选账号。部分微信版本可能拒绝进程访问，此时可手动填写密钥或配置外部工具。图片密钥优先从本账号缓存推导并校验。</div>}
                 <div className="key-actions">
                   {isManualStartPrompt ? (
                     <div className="manual-prompt">
@@ -1181,7 +1181,7 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
         <ConfirmDialog
             open={showDbKeyConfirm}
             title="开始获取数据库密钥"
-            message={isWindows ? '确认目标应用已登录后且只存在一个实例时，开始扫描' : `当开始获取后 WeFlow 将会执行准备操作。
+            message={isMac ? '请确认微信已打开且只存在一个实例。内置工具将尝试获取密钥，并验证所选账号。系统拒绝访问时可选择管理员授权重试；不需要提前退出账号或修改系统保护设置。' : isWindows ? '确认目标应用已登录后且只存在一个实例时，开始扫描' : `当开始获取后 WeFlow 将会执行准备操作。
 
 请现在将目标应用退出登录，并保持在未登录状态。
 ${isLinux ? `

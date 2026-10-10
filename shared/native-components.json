@@ -150,6 +150,21 @@
       "path": "resources/welive/win32/x64/welive.exe",
       "gitBlobSha": "50470e5f78e97e441e5244d024d8af0d6a21238c",
       "size": 2142720
+    },
+    {
+      "path": "resources/key/macos/universal/libwx_key.dylib",
+      "gitBlobSha": "59c673a33cb94a13d70f26dd1a262ebb050f78f4",
+      "size": 409856
+    },
+    {
+      "path": "resources/key/macos/universal/xkey_helper",
+      "gitBlobSha": "d0c53a86d8a65b5d89bc79a2a2a91cfba5801d7b",
+      "size": 344000
+    },
+    {
+      "path": "resources/key/macos/universal/image_scan_helper",
+      "gitBlobSha": "b10856d9cb0b8599471fd1ac640dff381320b2f6",
+      "size": 101920
     }
   ],
   "platforms": {
@@ -167,7 +182,9 @@
     "darwin-arm64": {
       "wcdbLibPath": "resources/wcdb/macos/universal/libwcdb_api.dylib",
       "imageNativeAddonPath": "resources/wedecrypt/macos/arm64/weflow-image-native-macos-arm64.node",
-      "welivePath": "resources/welive/macos/arm64/welive"
+      "welivePath": "resources/welive/macos/arm64/welive",
+      "macKeyHelperPath": "resources/key/macos/universal/xkey_helper",
+      "macImageKeyHelperPath": "resources/key/macos/universal/image_scan_helper"
     },
     "linux-x64": {
       "wcdbLibPath": "resources/wcdb/linux/x64/libwcdb_api.so",

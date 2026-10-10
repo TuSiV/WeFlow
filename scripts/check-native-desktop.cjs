@@ -39,6 +39,21 @@ async function main() {
   key.func('bool GetImageKey(_Out_ char *resultBuffer, int bufferSize)')
   // Bind only: do not attach to or restart any process in CI.
   }
+  if (process.platform === 'darwin') {
+    const keyDirectory = path.dirname(path.join(nativeRoot, paths.macKeyHelperPath))
+    const keyLibrary = koffi.load(path.join(keyDirectory, 'libwx_key.dylib'))
+    keyLibrary.func('const char* GetDbKey()')
+    keyLibrary.func('const char* ListWeChatProcesses()')
+    keyLibrary.func('const char* ScanMemoryForImageKey(int pid, const char* ciphertext)')
+    // Invalid PIDs exercise the shipped executable/loader, never attach to a process.
+    for (const [file, args] of [[paths.macKeyHelperPath,['0','1000']], [paths.macImageKeyHelperPath,['0','00']]]) {
+      const response = spawnSync(path.join(nativeRoot,file), args, { encoding:'utf8',timeout:10000 })
+      assert.equal(response.signal,null,response.stderr)
+      const payload=JSON.parse(response.stdout.trim().split(/\r?\n/).pop())
+      assert.equal(payload.success,false,'Invalid PID must never return a key')
+    }
+    console.log('Bundled Mac key-library symbols and both helper invalid-PID execution checks passed; no real process was attached.')
+  }
   const addon = require(path.join(nativeRoot, paths.imageNativeAddonPath))
   assert.equal(typeof addon.decryptDatNative, 'function')
   const temporary = process.env.WEFLOW_NATIVE_TEST_TEMP
@@ -103,6 +118,7 @@ async function main() {
       const row = messages.messages[0]
       selectedRef = {localId:Number(row.local_id),createTime:Number(row.create_time),serverIdRaw:String(row.server_id || '0'),localType:Number(row.local_type)}
     } finally { core.close() }
+    if (process.platform === 'darwin') await require('./check-mac-key-runtime.cjs')(root, temporary, nativeRoot, paths, fixture)
     const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000b49444154789c636000020000050001a5f645400000000049454e44ae426082', 'hex')
     const dat = path.join(temporary, 'fixture.dat')
     fs.writeFileSync(dat, png.map(value => value ^ 0x66))

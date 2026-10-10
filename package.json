@@ -28,7 +28,7 @@
     "components:test": "node scripts/test-wcdb-date-compat.cjs && npm run components:test:shared",
     "components:test:windows": "node scripts/check-native-windows.cjs",
     "components:test:macos": "node scripts/test-wcdb-macos-date-compat.cjs && node scripts/check-native-macos.cjs",
-    "components:test:shared": "node scripts/test-native-resolution.cjs && node scripts/test-legacy-manifest.cjs && node scripts/test-source-export-failures.cjs && node scripts/test-account-discovery.cjs && node scripts/test-chat-export.cjs"
+    "components:test:shared": "node scripts/test-native-resolution.cjs && node scripts/test-legacy-manifest.cjs && node scripts/test-source-export-failures.cjs && node scripts/test-account-discovery.cjs && node scripts/test-chat-export.cjs && node scripts/test-mac-key.cjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.12",
@@ -136,7 +136,8 @@
       "icon": "resources/icons/macos/icon.icns",
       "signIgnore": [
         "resources/wcdb/.*",
-        "resources/wedecrypt/.*"
+        "resources/wedecrypt/.*",
+        "resources/key/.*"
       ],
       "minimumSystemVersion": "15.0.0",
       "identity": "-"

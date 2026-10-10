@@ -61,4 +61,8 @@ Windows 工作流仅在原生读取、源码 HTML 导出、类型检查、生产
 
 模拟数据含一位假联系人和一条假文本消息，无用户记录。组件测试涵盖原始/派生哈希、幂等转换、拒绝篡改、开发/打包路径及缺少依赖。真实密钥获取、多年记录及附件的完整性仍需真实账户副本验证。
 
-来源及第三方许可证见 resources/native-licenses/。密钥源码适配器改编自固定 Weport 提交的 keyService.ts；派生代码遵循 CC BY-NC-SA 4.0，第三方组件保留其许可证。Windows ARM64、macOS、Linux 本次仍为外部组件模式。
+来源及第三方许可证见 resources/native-licenses/。密钥源码适配器改编自固定 Weport 提交的 keyService.ts；派生代码遵循 CC BY-NC-SA 4.0，第三方组件保留其许可证。Windows ARM64、Linux 仍为外部组件模式。Mac Apple Silicon 的数据库/图片解密和密钥辅助程序已加入固定组件安装与完整性校验。
+
+## Mac 内置密钥获取
+
+新增 `bundledMacKeyService.ts`：外部工具显式配置仍优先，否则使用随包 `xkey_helper`；仅针对唯一微信主进程，候选密钥必须通过所选账号数据库验证。权限拒绝可取消或选择系统授权重试一次；不改 SIP、微信签名或系统调试设置。图片优先从所选账号 kvcomm 缓存推导并用 V2 图片模板验证，不返回无模板猜测结果。原生工具和许可证来源固定，具体微信版本取钥成功不能由 CI 模拟数据推断。

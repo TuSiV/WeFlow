@@ -4,8 +4,7 @@ import { ConfigService } from './config'
 import { resolveBundledComponentPath } from './bundledNativeComponents'
 
 /**
- * 密钥获取（数据库密钥 / 图片密钥）完全外包给用户自备的第三方可执行程序（keyProviderPath），
- * 不再内置任何原生内存扫描或来源校验逻辑。
+ * 显式配置的外部密钥工具优先；否则使用经过完整性校验的随包 Windows/Mac 工具。
  *
  * 协议：以一行 JSON 写入子进程 stdin 描述请求；子进程通过 stdout 按行输出 NDJSON：
  *   {"type":"progress","message":"...","level":0}  // 可多次，转发给 onStatus
@@ -25,10 +24,13 @@ type ProviderRequest =
 
 export class KeyProviderService {
   private configService = new ConfigService()
-  private bundledService: Promise<import('./bundledWindowsKeyService').KeyService> | null = null
+  private bundledService: Promise<import('./bundledWindowsKeyService').KeyService | import('./bundledMacKeyService').KeyServiceMac> | null = null
 
   private getBundledService() {
     if (String(this.configService.get('keyProviderPath') || '').trim()) return null
+    if (process.platform === 'darwin' && process.arch === 'arm64') {
+      return this.bundledService ||= import('./bundledMacKeyService').then(({ KeyServiceMac }) => new KeyServiceMac())
+    }
     if (!resolveBundledComponentPath('keyDllPath')) return null
     return this.bundledService ||= import('./bundledWindowsKeyService').then(({ KeyService }) => new KeyService())
   }
@@ -121,7 +123,11 @@ export class KeyProviderService {
     internalDbKeyHex?: string
   ): Promise<DbKeyResult> {
     const bundled = this.getBundledService()
-    if (bundled) return (await bundled).autoGetDbKey(timeoutMs, onStatus)
+    if (bundled) {
+      const service = await bundled
+      if (process.platform === 'darwin') return (service as import('./bundledMacKeyService').KeyServiceMac).autoGetDbKey(timeoutMs, onStatus, dbPath, accountId)
+      return service.autoGetDbKey(timeoutMs, onStatus)
+    }
     return this.invoke<DbKeyResult>(
       { action: 'get_db_key', dbPath, accountId, internalDbKeyHex },
       onStatus,
