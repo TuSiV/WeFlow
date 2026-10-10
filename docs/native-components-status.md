@@ -2,15 +2,15 @@
 
 已修复固定数据库库的到期初始化失败。Windows 实际 Electron 初始化、模拟加密会话和消息读取、模拟图片解密、实际 exportWorker 的源码 HTML 导出、类型检查、生产构建和 NSIS 打包全部通过；真实微信账号导出未验证。
 
-验证提交：`1bc76139fa03c9fdadf397dfd3fdc010fb39d036`。[完整 Windows 检查](https://github.com/TuSiV/WeFlow/actions/runs/37912313615)与发布任务均成功。[预发布安装包](https://github.com/TuSiV/WeFlow/releases/tag/windows-wcdb-compat-37912313615)：`WeFlow-5.0.0-wcdb-compat.11-Setup.exe`，191379461 字节，SHA-256 `baa6235ddc55d9118a54e63607f11a8869491b92aba7338f47c328d9db3e213e`，同时提供 `SHA256SUMS.txt`。
+验证提交：`3539f3bcd537e66e9dd26ddfa08860c4ffae8b84`。[完整 Windows 检查](https://github.com/TuSiV/WeFlow/actions/runs/38014719220)已通过。[预发布安装包](https://github.com/TuSiV/WeFlow/releases/tag/windows-wcdb-compat-38014719220)：`WeFlow-5.0.0-wcdb-compat.14-Setup.exe`，191382032 字节，SHA-256 `ffac3e9a48db3a28f95ec78aeb11dc5b2425526b00c989ac4cdbc3bb432fd76e`，同时提供 `SHA256SUMS.txt`。
 
-## 账号自动扫描与选择（本次更新）
+## 账号自动扫描与选择
 
 引导页在数据库目录和密钥步骤扫描已选目录，未填写目录时扫描系统文档下常见微信数据根目录；可从客户端可读配置发现自定义存储路径，或通过“浏览”显式指定目录。只遍历账号层级及已知容器，不全盘递归；按非空 session.db 判断新版账号，不依赖 wxid/accountId 前缀。支持直接选账号目录，保留完整目录名及后缀，优先精确解析所选目录。旧版 Msg/MicroMsg.db 单独标记不可连接。
 
 选择后填写根目录和账号 ID；切换账号清除数据库/图片密钥。自动获取密钥后使用所选账号进行连接校验，未通过不保存密钥，也不接受外部服务返回其他 ID 覆盖选择。账号目录列表不代表当前微信登录状态，昵称和头像不作未解密猜测。手动输入仍保留。
 
-本次新增文件系统扫描测试及 Windows 实际 React 页面交互测试，后者以假账号和模拟密钥接口验证回填、切换清空、错误密钥拒绝与空结果提示；真实账号获取仍未验证。新版打包与发布由工作流完成，下方上一版发布记录仅对应其注明的提交。
+文件系统扫描测试及 Windows 实际 React 页面交互测试均通过，后者以假账号和模拟密钥接口验证回填、切换清空、错误密钥拒绝与空结果提示；真实账号获取仍未验证。新版已完成 NSIS 打包并发布，下载链接和校验值见上方。
 
 ## 默认组件与导出路径
 
