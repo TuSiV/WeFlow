@@ -7,9 +7,24 @@
     "name": "cc",
     "email": "yccccccy@proton.me"
   },
+  "contributors": [
+    {
+      "name": "YONGZHE CHEN",
+      "url": "https://github.com/TuSiV"
+    }
+  ],
+  "maintainers": [
+    {
+      "name": "YONGZHE CHEN",
+      "url": "https://github.com/TuSiV"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/TuSiV/WeFlow/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hicccc77/WeFlow"
+    "url": "https://github.com/TuSiV/WeFlow"
   },
   "//": "\u4e8c\u6539\u4e0d\u5e94\u6539\u53d8\u6b64\u5904\u7684\u4f5c\u8005\u4e0e\u5e94\u7528\u4fe1\u606f",
   "scripts": {

@@ -10,18 +10,18 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hicccc77/WeFlow/stargazers"><img src="https://img.shields.io/github/stars/hicccc77/WeFlow?style=flat&label=Stars&labelColor=2A3B4C&color=60A5FA" alt="Stargazers"></a>
-  <a href="https://github.com/hicccc77/WeFlow/network/members"><img src="https://img.shields.io/github/forks/hicccc77/WeFlow?style=flat&label=Forks&labelColor=2A3B4C&color=60A5FA" alt="Forks"></a>
-  <a href="https://github.com/hicccc77/WeFlow/releases"><img src="https://img.shields.io/github/downloads/hicccc77/WeFlow/total?style=flat&label=Downloads&labelColor=2A3B4C&color=60A5FA" alt="Downloads"></a>
+  <a href="https://github.com/TuSiV/WeFlow/stargazers"><img src="https://img.shields.io/github/stars/TuSiV/WeFlow?style=flat&label=Stars&labelColor=2A3B4C&color=60A5FA" alt="Stargazers"></a>
+  <a href="https://github.com/TuSiV/WeFlow/network/members"><img src="https://img.shields.io/github/forks/TuSiV/WeFlow?style=flat&label=Forks&labelColor=2A3B4C&color=60A5FA" alt="Forks"></a>
+  <a href="https://github.com/TuSiV/WeFlow/releases"><img src="https://img.shields.io/github/downloads/TuSiV/WeFlow/total?style=flat&label=Downloads&labelColor=2A3B4C&color=60A5FA" alt="Downloads"></a>
   <br><br>
-  <a href="https://t.me/weflow_cc"><img src="https://img.shields.io/badge/Telegram-频道-60A5FA?style=flat&logo=telegram&logoColor=white&labelColor=2A3B4C&color=60A5FA" alt="Telegram Channel" style="height: 24px; vertical-align: middle;"></a>
-  <a href="https://star-history.com/#hicccc77/WeFlow"><img src="https://api.star-history.com/badge?repo=hicccc77/WeFlow&theme=dark" alt="Star History Rank" style="height: 30px; vertical-align: middle;"></a>
+  <a href="https://github.com/TuSiV/WeFlow/issues"><img src="https://img.shields.io/badge/GitHub-反馈问题-60A5FA?style=flat&logo=github&logoColor=white&labelColor=2A3B4C" alt="Issues" style="height: 24px; vertical-align: middle;"></a>
+  <a href="https://star-history.com/#TuSiV/WeFlow"><img src="https://api.star-history.com/badge?repo=TuSiV/WeFlow&theme=dark" alt="Star History Rank" style="height: 30px; vertical-align: middle;"></a>
 </p>
 
 > [!TIP]
-> 本仓库 `main` 提供已配置原生组件的 Windows x64 / Mac Apple Silicon 桌面安装包，不需要另行设计解密组件。上方徽章、贡献者及联系方式保留原项目信息；本仓库安装包请从 [TuSiV/WeFlow Releases](https://github.com/TuSiV/WeFlow/releases) 下载。
+> 本仓库由 **YONGZHE CHEN（[TuSiV](https://github.com/TuSiV)）** 独立维护，是 [WeFlow 原项目](https://github.com/hicccc77/WeFlow) 的 fork。`main` 提供已配置原生组件的 Windows x64 / Mac Apple Silicon 桌面安装包，请从 [本仓库 Releases](https://github.com/TuSiV/WeFlow/releases) 下载。上方统计均指向本仓库，上游署名与来源见文末。
 
-## 本分支快速入口
+## 快速入口
 
 - 已验证发布：[5.0.1-preview.3](https://github.com/TuSiV/WeFlow/releases/tag/v5.0.1-preview.3)，同一 Release 提供 Windows EXE、Mac DMG/ZIP 与 SHA-256 校验文件。
 - [使用指南](docs/USER-GUIDE.md)：安装、选择账号、密钥配置、完整聊天 PDF 与选定消息导出。
@@ -102,32 +102,21 @@ npm run dev
 
 构建、原生测试、Python PDF 校验及双平台发布步骤见 [TESTING.md](docs/TESTING.md)。显式配置外部组件时，以用户配置为准；正常使用随包组件时保持路径留空。
 
-## 推广与合作
+## 维护者与反馈
 
-如果您对 **WeFlow** 有兴趣，或者希望与我们展开深度合作或投放你的广告，欢迎随时通过邮件取得联系。我们非常期待与各位创作者、开发者及合作伙伴共同探索。
+本 fork 维护者：**YONGZHE CHEN（[TuSiV](https://github.com/TuSiV)）**。
 
-### 联系方式
+本仓库的主要修改包括 Windows/Mac 固定组件配置与校验、账号扫描选择、完整聊天 PDF 与选定消息导出、Mac 内置密钥工具、双平台统一发布和使用文档。实际验证范围见 [测试说明](docs/TESTING.md)。
 
-欢迎发送邮件至：
+问题反馈和功能建议请提交到 [本仓库 Issues](https://github.com/TuSiV/WeFlow/issues)，代码贡献请提交到 [本仓库 Pull requests](https://github.com/TuSiV/WeFlow/pulls)。请勿在公开反馈中上传密钥、原始数据库或聊天正文。
 
-<a href="mailto:yccccccy@proton.me"><img src="https://img.shields.io/badge/Email-yccccccy%40proton.me-60A5FA?style=flat-square&logo=proton&logoColor=white&labelColor=2A3B4C" alt="Protonmail" height="24px"></a>
+## 上游来源与致谢
 
-## 合作伙伴
+原项目：[hicccc77/WeFlow](https://github.com/hicccc77/WeFlow)，原作者 **cc（hicccc77）及 WeFlow 贡献者**。本仓库保留原项目署名、许可及历史修改记录，独立维护不表示原作者对本 fork 的背书。
 
-我们非常欢迎优秀的开源社区项目团队或其他团队与我们建立长期合作关系。期待与 WeFlow 携手并进，共同建设更开放的生态！
+项目沿用 [CC BY-NC-SA 4.0 许可证](LICENSE)。原生组件与适配逻辑还包含 Weport 固定来源；各第三方组件使用各自许可证，详见 [来源与修改说明](docs/LEGAL-PROVENANCE.md)。
 
-<p align="center">
-  <!-- 是的你没看错这里还是占位！
-  <a href="https://your-partner-website.com" target="_blank">
-    <img src="https://via.placeholder.com/150x50?text=Partner+1+Logo" alt="Partner Name" width="150" style="margin: 10px; vertical-align: middle;" />
-  </a> -->
-</p>
-
----
-
-## 贡献者
-
-感谢所有做出贡献的开发者！
+以下展示的是**上游项目贡献者**：
 
 <p align="center">
   <a href="https://github.com/hicccc77/WeFlow/graphs/contributors">
@@ -137,11 +126,11 @@ npm run dev
 
 ## Star History
 
-<a href="https://www.star-history.com/#hicccc77/WeFlow&type=date&legend=top-left">
+<a href="https://www.star-history.com/#TuSiV/WeFlow&type=date&legend=top-left">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=hicccc77/WeFlow&type=date&theme=dark&legend=top-left" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=hicccc77/WeFlow&type=date&legend=top-left" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=hicccc77/WeFlow&type=date&legend=top-left" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=TuSiV/WeFlow&type=date&theme=dark&legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=TuSiV/WeFlow&type=date&legend=top-left" />
+    <img alt="本仓库 Star History Chart" src="https://api.star-history.com/svg?repos=TuSiV/WeFlow&type=date&legend=top-left" />
   </picture>
 </a>
 

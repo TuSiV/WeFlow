@@ -5916,15 +5916,19 @@ JSON 输出格式：
       <div className="about-footer">
         <p className="about-desc">聊天记录分析工具</p>
         <div className="about-links">
-          <a href="#" onClick={(e) => { e.preventDefault(); window.electronAPI.shell.openExternal('https://weflow.top') }}>官网</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); window.electronAPI.shell.openExternal('https://weflow.top') }}>上游官网</a>
           <span>·</span>
-          <a href="#" onClick={(e) => { e.preventDefault(); window.electronAPI.shell.openExternal('https://github.com/hicccc77/WeFlow') }}>GitHub 仓库</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); window.electronAPI.shell.openExternal('https://github.com/TuSiV/WeFlow') }}>本 fork 仓库</a>
+          <span>·</span>
+          <a href="#" onClick={(e) => { e.preventDefault(); window.electronAPI.shell.openExternal('https://github.com/TuSiV/WeFlow/issues') }}>反馈问题</a>
           <span>·</span>
           <a href="#" onClick={(e) => { e.preventDefault(); window.electronAPI.shell.openExternal('https://chatlab.fun') }}>ChatLab</a>
           <span>·</span>
           <a href="#" onClick={(e) => { e.preventDefault(); window.electronAPI.window.openAgreementWindow() }}>用户协议</a>
         </div>
         <p className="copyright">© 2026 WeFlow. All rights reserved.</p>
+        <p className="copyright">原项目：cc / WeFlow contributors</p>
+        <p className="copyright">本 fork 维护者：YONGZHE CHEN（TuSiV）</p>
 
         <div className="log-toggle-line" style={{ marginTop: '16px', justifyContent: 'center' }}>
           <span style={{ fontSize: '13px', opacity: 0.7 }}>匿名数据收集</span>

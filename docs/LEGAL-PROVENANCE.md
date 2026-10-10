@@ -1,12 +1,14 @@
-# 本分支来源与修改清单
+# 本仓库来源与修改清单
 
 这是一份来源索引，不替代各组件许可证，也不是对所有依赖授权情况的完整审计。原项目作者、项目名称及历史归属保留，不因本分支打包或文档整理而改写。
+
+本 fork 维护者为 **YONGZHE CHEN（[TuSiV](https://github.com/TuSiV)）**，维护仓库为 [TuSiV/WeFlow](https://github.com/TuSiV/WeFlow)。问题反馈使用本仓库 Issues。README 的统计与下载入口指向本仓库，原作者联系邮箱保留在原始作者元数据中，不作为本 fork 的支持入口。
 
 ## 代码与固定组件来源
 
 | 项目／文件 | 本分支用途与记录 |
 | --- | --- |
-| [WeFlow 原项目](https://github.com/hicccc77/WeFlow) | 桌面应用主体；README 原作者信息、贡献者及项目标识保留 |
+| [WeFlow 原项目](https://github.com/hicccc77/WeFlow) | 桌面应用主体；原作者 cc（hicccc77）、上游贡献者及项目标识保留，README 在来源与致谢中标明上游归属 |
 | [Weport 固定提交](https://github.com/Panther114/Weport/tree/3b9e2afd341f0eef56d4be9dafca25c8fe8be533) | Windows/Mac 原生组件、密钥适配逻辑的固定来源；文件大小和 Git blob SHA 见 [清单](../shared/native-components.json) |
 | [Windows 密钥适配器](../electron/services/bundledWindowsKeyService.ts) | 按文件头记录改编固定 Weport 来源；数据库／图片取钥及账号范围处理 |
 | [Mac 密钥适配器](../electron/services/bundledMacKeyService.ts)、[缓存逻辑](../electron/services/macKeySupport.ts) | 辅助程序协议、缓存目录和推导规则来源及修改见 [Mac 密钥说明](../resources/native-licenses/MACOS-KEY-NOTICE.md) |

@@ -692,16 +692,17 @@ function App() {
               <div className="agreement-notice">
                 <strong>这是免费软件，如果你是付费购买的话请骂死那个骗子。</strong>
                 <span className="agreement-notice-link">
-                  官方网站：
+                  上游官网：
                   <a href="https://weflow.top" target="_blank" rel="noreferrer">
                     https://weflow.top
                   </a>
                   &nbsp;·&nbsp;
-                  <a href="https://github.com/hicccc77/WeFlow" target="_blank" rel="noreferrer">
-                    GitHub 仓库
+                  <a href="https://github.com/TuSiV/WeFlow" target="_blank" rel="noreferrer">
+                    本 fork 仓库
                   </a>
                 </span>
               </div>
+              <p>原项目：cc（hicccc77）及 WeFlow 贡献者；本 fork 维护者：YONGZHE CHEN（TuSiV）。</p>
               <div className="agreement-text">
                 <h4>1. 数据安全</h4>
                 <p>聊天数据库、学习索引和分析记录默认保存在本地。仅当你主动使用并授权 AI 功能时，任务所需的可读聊天文本、派生记忆、深聊问题和既有 AI 结论会直接发送给你自行配置的模型服务商；WeFlow 开发者服务器不会接收这些内容。</p>
