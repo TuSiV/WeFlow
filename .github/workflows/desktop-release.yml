@@ -2,7 +2,7 @@ name: Desktop unified release
 
 on:
   push:
-    branches: ['components/pinned-installer']
+    branches: ['main']
   workflow_dispatch:
 
 permissions:

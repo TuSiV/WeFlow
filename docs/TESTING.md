@@ -61,7 +61,7 @@ codesign --verify --deep --strict release/mac-arm64/WeFlow.app
 
 ## 发布门槛
 
-`.github/workflows/desktop-release.yml` 在本分支 push 或手动触发后运行两个平台任务；两个任务全部成功才能进入发布任务。共同版本为 `5.0.1-preview.<运行序号>`，三个安装包必须齐全。
+`.github/workflows/desktop-release.yml` 在 `main` 分支 push 或手动触发后运行两个平台任务；两个任务全部成功才能进入发布任务。共同版本为 `5.0.1-preview.<运行序号>`，三个安装包必须齐全。原组件开发分支已整合到 `main`，现有已验证 Release 保持不变。
 
 发布任务计算并复核 SHA-256，创建草稿、上传三个安装包与校验文件，确认四个附件后公开同一个预发布 Release。平台文件名包含 Windows x64 或 macOS arm64。手动单平台检查工作流不再独立发布；旧的标签构建工作流属于另一路径，不是本分支此次已验证的发布流程。
 

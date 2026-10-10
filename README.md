@@ -19,7 +19,7 @@
 </p>
 
 > [!TIP]
-> 本分支 `components/pinned-installer` 提供已配置原生组件的 Windows x64 / Mac Apple Silicon 桌面安装包，不需要另行设计解密组件。上方徽章、贡献者及联系方式保留原项目信息；本分支安装包请从 [TuSiV/WeFlow Releases](https://github.com/TuSiV/WeFlow/releases) 下载。
+> 本仓库 `main` 提供已配置原生组件的 Windows x64 / Mac Apple Silicon 桌面安装包，不需要另行设计解密组件。上方徽章、贡献者及联系方式保留原项目信息；本仓库安装包请从 [TuSiV/WeFlow Releases](https://github.com/TuSiV/WeFlow/releases) 下载。
 
 ## 本分支快速入口
 
@@ -86,7 +86,7 @@ WeFlow 提供本地 HTTP API 服务，支持通过接口查询消息数据，可
 
 ```bash
 # 1. 克隆项目到本地
-git clone --branch components/pinned-installer https://github.com/TuSiV/WeFlow.git
+git clone --branch main https://github.com/TuSiV/WeFlow.git
 cd WeFlow
 
 # 2. 安装项目依赖

@@ -1,6 +1,6 @@
 # 使用指南：Windows 与 Mac 桌面版
 
-适用于 `components/pinned-installer` 分支。已验证版本为 [5.0.1-preview.3](https://github.com/TuSiV/WeFlow/releases/tag/v5.0.1-preview.3)。后续版本以对应 Release 说明为准。
+适用于本仓库 `main` 分支；原组件开发分支的功能已整合到主分支。已验证版本为 [5.0.1-preview.3](https://github.com/TuSiV/WeFlow/releases/tag/v5.0.1-preview.3)。分支整合没有重新生成该版本安装包；后续版本以对应 Release 说明为准。
 
 ## 1. 安装与校验
 
