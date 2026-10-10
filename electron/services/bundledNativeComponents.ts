@@ -5,12 +5,13 @@ import manifest from '../../shared/native-components.json'
 
 type ComponentKey = 'wcdbLibPath' | 'imageNativeAddonPath' | 'welivePath' | 'keyDllPath'
 
-/** Resolve only the pinned Windows x64 bundle. Explicit user paths remain overrides. */
+/** Resolve verified desktop bundles. Explicit user paths remain overrides. */
 export function resolveBundledComponentPath(key: ComponentKey): string | null {
-  if (process.platform !== 'win32' || process.arch !== 'x64') return null
+  const target = `${process.platform}-${process.arch}`
+  if (target !== 'win32-x64' && target !== 'darwin-arm64') return null
   const blocks = manifest.runtimeBlocks as Partial<Record<string, Partial<Record<ComponentKey, string>>>>
-  if (blocks['win32-x64']?.[key]) return null
-  const paths = manifest.platforms['win32-x64'] as Partial<Record<ComponentKey, string>>
+  if (blocks[target]?.[key]) return null
+  const paths = manifest.platforms[target] as Partial<Record<ComponentKey, string>>
   const relative = paths[key]
   if (!relative) return null
   const packagedRoot = process.resourcesPath

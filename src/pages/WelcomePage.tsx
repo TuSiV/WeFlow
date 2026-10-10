@@ -1003,6 +1003,7 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
                   </button>
                 </div>
 
+                {isMac && <div className="field-hint">Mac 版暂未内置自动获取密钥工具。请填写该账号的数据库密钥；如已在设置中配置外部密钥工具，可点击自动获取。图片密钥也需手动填写或由外部工具提供。</div>}
                 <div className="key-actions">
                   {isManualStartPrompt ? (
                     <div className="manual-prompt">
@@ -1020,7 +1021,7 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
 
                 {dbKeyStatus && <div className={`status-message ${isDbKeyReadyMessage(dbKeyStatus) ? 'is-success' : ''}`}>{dbKeyStatus}</div>}
                 {isAddAccountMode && !hasReacquiredDbKey && (
-                  <div className="field-hint">添加账号模式下需先自动获取一次数据库密钥，才能完成并返回主窗口。</div>
+                  <div className="field-hint">添加账号模式下需填写或获取该账号的数据库密钥，才能完成并返回主窗口。</div>
                 )}
               </div>
             )}

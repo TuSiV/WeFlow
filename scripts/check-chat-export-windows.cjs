@@ -7,7 +7,7 @@ const { BrowserWindow } = require('electron')
 const { load, buildSyntheticPdfHtml } = require('./test-chat-export.cjs')
 function verifyPdf(file, expected, excluded = [], minPages = 1) {
   assert(fs.readFileSync(file).subarray(0, 5).toString() === '%PDF-')
-  const result = spawnSync('python', ['-c', `import sys,json\nfrom pypdf import PdfReader\nr=PdfReader(sys.argv[1]); text='\\n'.join(p.extract_text() or '' for p in r.pages)\nexpect=json.loads(sys.argv[2]); exclude=json.loads(sys.argv[3])\nassert len(r.pages)>=int(sys.argv[4]),len(r.pages)\nfor s in expect: assert s in text,s\nfor s in exclude: assert s not in text,s\nprint('Verified PDF pages:',len(r.pages),'messages:',len(expect))`, file, JSON.stringify(expected), JSON.stringify(excluded), String(minPages)], { encoding:'utf8' })
+  const result = spawnSync(process.platform === 'win32' ? 'python' : 'python3', ['-c', `import sys,json\nfrom pypdf import PdfReader\nr=PdfReader(sys.argv[1]); text='\\n'.join(p.extract_text() or '' for p in r.pages)\nexpect=json.loads(sys.argv[2]); exclude=json.loads(sys.argv[3])\nassert len(r.pages)>=int(sys.argv[4]),len(r.pages)\nfor s in expect: assert s in text,s\nfor s in exclude: assert s not in text,s\nprint('Verified PDF pages:',len(r.pages),'messages:',len(expect))`, file, JSON.stringify(expected), JSON.stringify(excluded), String(minPages)], { encoding:'utf8' })
   assert.equal(result.status, 0, result.stdout + result.stderr)
   console.log(result.stdout.trim())
 }

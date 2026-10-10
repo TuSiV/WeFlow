@@ -44,6 +44,13 @@ const touch = file => { fs.mkdirSync(path.dirname(file), { recursive: true }); f
     fs.writeFileSync(config, 'Z:\\wechat-custom', 'utf16le')
     const defaults = await defaultAccountRoots(path.join(root, 'Documents'), root, roaming)
     assert(defaults.some(p => p.includes('wechat-custom')))
+    const macHome = path.join(root, 'mac-home')
+    const macAccount = path.join(macHome, 'Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files/mac_account')
+    touch(path.join(macAccount, 'db_storage/session/session.db'))
+    const macRoots = await defaultAccountRoots(path.join(macHome, 'Documents'), macHome, undefined, 'darwin')
+    const macScan = await discoverAccounts(macRoots)
+    assert.equal(macScan.accounts.length, 1)
+    assert.equal(macScan.accounts[0].accountDir, macAccount)
     console.log('Account discovery: nested/direct/custom roots, multiple accounts, arbitrary names, legacy status, missing roots, empty/cache exclusions and exact account resolution passed.')
   } finally { fs.rmSync(root, { recursive: true, force: true }) }
 })().catch(error => { console.error(error); process.exitCode = 1 })

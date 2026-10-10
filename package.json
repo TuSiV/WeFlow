@@ -11,7 +11,7 @@
     "type": "git",
     "url": "https://github.com/hicccc77/WeFlow"
   },
-  "//": "二改不应改变此处的作者与应用信息",
+  "//": "\u4e8c\u6539\u4e0d\u5e94\u6539\u53d8\u6b64\u5904\u7684\u4f5c\u8005\u4e0e\u5e94\u7528\u4fe1\u606f",
   "scripts": {
     "postinstall": "patch-package && electron-builder install-app-deps && node scripts/prepare-electron-runtime.cjs",
     "rebuild": "electron-rebuild",
@@ -25,8 +25,10 @@
     "electron:build": "npm run build",
     "components:install": "node scripts/install-native-components.cjs",
     "components:check": "node scripts/install-native-components.cjs --check",
-    "components:test": "node scripts/test-wcdb-date-compat.cjs && node scripts/test-native-resolution.cjs && node scripts/test-legacy-manifest.cjs && node scripts/test-source-export-failures.cjs && node scripts/test-account-discovery.cjs && node scripts/test-chat-export.cjs",
-    "components:test:windows": "node scripts/check-native-windows.cjs"
+    "components:test": "node scripts/test-wcdb-date-compat.cjs && npm run components:test:shared",
+    "components:test:windows": "node scripts/check-native-windows.cjs",
+    "components:test:macos": "node scripts/check-native-macos.cjs",
+    "components:test:shared": "node scripts/test-native-resolution.cjs && node scripts/test-legacy-manifest.cjs && node scripts/test-source-export-failures.cjs && node scripts/test-account-discovery.cjs && node scripts/test-chat-export.cjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.12",
@@ -131,7 +133,11 @@
       "gatekeeperAssess": false,
       "entitlements": "electron/entitlements.mac.plist",
       "entitlementsInherit": "electron/entitlements.mac.plist",
-      "icon": "resources/icons/macos/icon.icns"
+      "icon": "resources/icons/macos/icon.icns",
+      "signIgnore": [
+        "resources/wcdb/.*",
+        "resources/wedecrypt/.*"
+      ]
     },
     "win": {
       "target": [

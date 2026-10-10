@@ -1,0 +1,84 @@
+name: macOS native configuration check
+
+on:
+  push:
+    branches: ['components/pinned-installer']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos-arm64:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Download pinned Apple Silicon native bundle
+        run: npm run components:install -- darwin-arm64
+      - name: Verify native architecture and initialization
+        run: |
+          test "$(uname -m)" = arm64
+          file resources/wcdb/macos/universal/*.dylib resources/wedecrypt/macos/arm64/*.node
+          otool -L resources/wcdb/macos/universal/libwcdb_api.dylib
+          node -e 'const k=require("koffi"),p=require("path");k.load(p.resolve("resources/wcdb/macos/universal/libWCDB.dylib"));const l=k.load(p.resolve("resources/wcdb/macos/universal/libwcdb_api.dylib"));const code=l.func("int32 wcdb_init()")();console.log("Native init:",code);if(code!==0)process.exit(1);l.func("int32 wcdb_shutdown()")()'
+      - name: Check types and build desktop application
+        run: |
+          npm version "5.0.0-macos-preview.${{ github.run_number }}" --no-git-tag-version --ignore-scripts
+          npm run typecheck
+          node scripts/clean-dist-electron.cjs
+          npx vite build
+      - name: Install PDF verification tool
+        run: python3 -m pip install --break-system-packages pypdf
+      - name: Check native runtime and application export
+        run: |
+          npm run components:test:shared
+          npm run components:test:macos
+      - name: Package Apple Silicon application
+        run: npx electron-builder --mac dmg zip --arm64 --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify packaged native resources
+        run: |
+          node scripts/check-packaged-macos.cjs
+          codesign --verify --deep --strict release/mac-arm64/WeFlow.app
+      - name: Save verified Mac installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: WeFlow-macOS-arm64-installers
+          path: |
+            release/*.dmg
+            release/*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  publish-macos-prerelease:
+    needs: macos-arm64
+    if: github.repository == 'TuSiV/WeFlow'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: WeFlow-macOS-arm64-installers
+          path: release
+      - name: Publish verified Mac installers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: macos-arm64-${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd release
+          sha256sum -- *.dmg *.zip > SHA256SUMS.txt
+          gh release create "$RELEASE_TAG" ./*.dmg ./*.zip SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "macOS Apple Silicon preview" \
+            --notes-file ../docs/macos-release-notes.md --prerelease

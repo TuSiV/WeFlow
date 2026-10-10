@@ -6,6 +6,9 @@
   "runtimeBlocks": {
     "win32-x64": {
       "welivePath": "Bundled WeLive transport challenge returns -101 after its fixed expiry. Default export uses the application source cursor pipeline."
+    },
+    "darwin-arm64": {
+      "welivePath": "Bundled Mac build uses the application source cursor pipeline; WeLive transport is not distributed."
     }
   },
   "files": [

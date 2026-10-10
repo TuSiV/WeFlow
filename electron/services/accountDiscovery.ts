@@ -63,7 +63,7 @@ export async function discoverAccounts(roots: string[]): Promise<AccountScanResu
   return result
 }
 
-export async function defaultAccountRoots(documents: string, home: string, appData?: string): Promise<string[]> {
+export async function defaultAccountRoots(documents: string, home: string, appData?: string, platform: NodeJS.Platform = process.platform): Promise<string[]> {
   const bases = [documents, join(home, 'Documents')]
   const configuredRoots: string[] = []
   // This optional client config can name a custom storage base. Unknown/invalid
@@ -80,5 +80,6 @@ export async function defaultAccountRoots(documents: string, home: string, appDa
       }
     } catch { /* Optional config is absent on many client installations. */ }
   }
-  return [...new Set([...configuredRoots, ...bases.flatMap(base => [join(base, 'xwechat_files'), join(base, 'WeChat Files')])])]
+  const macRoots = platform === 'darwin' ? [join(home, 'Library', 'Containers', 'com.tencent.xinWeChat', 'Data', 'Documents', 'xwechat_files')] : []
+  return [...new Set([...configuredRoots, ...macRoots, ...bases.flatMap(base => [join(base, 'xwechat_files'), join(base, 'WeChat Files')])])]
 }
