@@ -17,6 +17,8 @@ module.exports = async function checkAccountChooser(root, temporary) {
     window.testAccounts = ${JSON.stringify(accounts)};
     window.testVerification = true;
     window.testCalls = [];
+    window.accountInput = () => document.querySelector('input[placeholder="请输入账号 ID"]');
+    window.keyInput = () => document.querySelector('input[placeholder="64 位十六进制密钥"]');
     window.electronAPI = {
       config: { get: async key => ({dbPath: 'C:/synthetic/xwechat_files', myAccountId: 'custom_second_efgh', cachePath: ''}[key]), set: async () => {} },
       account: { scan: async root => ({accounts: window.testAccounts, searchedPaths: [root], warnings: []}) },
@@ -35,7 +37,7 @@ module.exports = async function checkAccountChooser(root, temporary) {
   const file = path.join(temporary, 'account-chooser-test.html')
   fs.writeFileSync(file, `<html><head><meta charset="utf-8"></head><body><div id="root"></div><script>${bundle.replace(/<\/script/gi, '<\\/script')}</script></body></html>`)
   const win = new BrowserWindow({ show: false, width: 1000, height: 900, webPreferences: { nodeIntegration: false, contextIsolation: true } })
-  win.webContents.on('console-message', (_event, _level, message) => console.log('Account chooser renderer:', message))
+  win.webContents.on('console-message', event => console.log('Account chooser renderer:', event.message))
   const run = async js => {
     const value = await win.webContents.executeJavaScript(`(() => { try { return eval(${JSON.stringify(js)}); } catch (error) { return { __failure: String(error), stack: error.stack }; } })()`)
     if (value && value.__failure) throw new Error(`${value.__failure}; script: ${js}; ${value.stack}`)
@@ -54,25 +56,25 @@ module.exports = async function checkAccountChooser(root, temporary) {
     await waitFor('document.querySelectorAll(".account-discovery-item").length === 3')
     assert.equal(await run('document.querySelectorAll(".account-discovery-item")[2].disabled'), true)
     await run('document.querySelectorAll(".account-discovery-item")[0].click()')
-    await waitFor('document.querySelector("input[placeholder=\"请输入账号 ID\"]").value === "wxid_first_abcd"')
-    await run(`const input = document.querySelector('input[placeholder="64 位十六进制密钥"]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'b'.repeat(64)); input.dispatchEvent(new Event('input', {bubbles:true}));`)
-    await waitFor('document.querySelector("input[placeholder=\"64 位十六进制密钥\"]").value.length === 64')
+    await waitFor('window.accountInput().value === "wxid_first_abcd"')
+    await run(`const input = window.keyInput(); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'b'.repeat(64)); input.dispatchEvent(new Event('input', {bubbles:true}));`)
+    await waitFor('window.keyInput().value.length === 64')
     await run('document.querySelectorAll(".account-discovery-item")[1].click()')
-    await waitFor('document.querySelector("input[placeholder=\"请输入账号 ID\"]").value === "custom_second_efgh" && document.querySelector("input[placeholder=\"64 位十六进制密钥\"]").value === ""')
+    await waitFor('window.accountInput().value === "custom_second_efgh" && window.keyInput().value === ""')
     const fetchKey = async () => {
       await run('[...document.querySelectorAll("button")].find(b => b.textContent.includes("自动获取密钥")).click()')
       await waitFor('!!document.querySelector(".confirm-dialog-overlay")')
       await run('[...document.querySelectorAll(".confirm-dialog-overlay button")].find(b => b.textContent.trim() === "确认").click()')
     }
     await fetchKey()
-    await waitFor('document.querySelector("input[placeholder=\"64 位十六进制密钥\"]").value.length === 64')
-    assert.equal(await run('document.querySelector("input[placeholder=\"请输入账号 ID\"]").value'), 'custom_second_efgh')
+    await waitFor('window.keyInput().value.length === 64')
+    assert.equal(await run('window.accountInput().value'), 'custom_second_efgh')
     assert.equal(await run('window.testCalls[1][2]'), 'custom_second_efgh')
     await waitFor('document.querySelectorAll(".account-discovery-item").length === 3 && !document.querySelectorAll(".account-discovery-item")[0].disabled')
     await run('window.testVerification = false; document.querySelectorAll(".account-discovery-item")[0].click()')
     await fetchKey()
     await waitFor('document.body.innerText.includes("获取的密钥无法打开所选账号")')
-    assert.equal(await run('document.querySelector("input[placeholder=\"64 位十六进制密钥\"]").value'), '')
+    assert.equal(await run('window.keyInput().value'), '')
     await waitFor('![...document.querySelectorAll("button")].find(b => b.textContent.includes("扫描当前目录")).disabled')
     await run('window.testAccounts = []; [...document.querySelectorAll("button")].find(b => b.textContent.includes("扫描当前目录")).click()')
     await waitFor('document.body.innerText.includes("未找到可用账号") && document.querySelectorAll(".account-discovery-item").length === 0')
