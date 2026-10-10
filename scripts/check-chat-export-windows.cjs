@@ -16,7 +16,7 @@ module.exports = async function(root, temporary, workerConfig, selectedRef) {
   const fullHtml = path.join(temporary, 'pagination.html'), fullPdf = path.join(temporary, 'pagination.pdf')
   const messages = await buildSyntheticPdfHtml(fullHtml, 620)
   await renderChatPdf(fullHtml, fullPdf)
-  verifyPdf(fullPdf, messages.map(row => row.content.split(' ')[0]), [], 2)
+  verifyPdf(fullPdf, [...messages.map(row => row.content.split(' ')[0]), '中文内容'], [], 2)
   const selectedHtml = path.join(temporary, 'selection.html'), selectedPdf = path.join(temporary, 'selection.pdf')
   await buildSyntheticPdfHtml(selectedHtml, 620, [{localId:1,createTime:1700000000},{localId:620,createTime:1700000619}])
   await renderChatPdf(selectedHtml, selectedPdf)

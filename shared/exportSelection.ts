@@ -7,6 +7,11 @@ export interface ExportMessageRef {
   tableName?: string
 }
 
+function normalizeSourcePath(value: string): string {
+  const normalized = value.replace(/\\/g, '/')
+  return /^(?:[a-z]:\/|\/\/)/i.test(normalized) ? normalized.toLowerCase() : normalized
+}
+
 /** Match database identities, never content or a time range alone. Fail closed on ambiguity. */
 export function selectExportMessages<T extends Record<string, any>>(rows: T[], selection: ExportMessageRef[]): T[] {
   if (!Array.isArray(selection) || selection.length === 0) throw new Error('请至少选择一条消息')
@@ -23,10 +28,13 @@ export function selectExportMessages<T extends Record<string, any>>(rows: T[], s
       throw new Error('所选消息标识无效，请重新选择')
     }
     const matches = (index.get(`${ref.localId}:${ref.createTime}`) || []).filter(row => {
-      if (ref.serverIdRaw && ref.serverIdRaw !== '0' && String(row.serverIdRaw || '') !== ref.serverIdRaw) return false
+      const hasServerIdentity = !!ref.serverIdRaw && ref.serverIdRaw !== '0'
+      if (hasServerIdentity && String(row.serverIdRaw || '') !== ref.serverIdRaw) return false
       if (ref.localType !== undefined && row.localType !== ref.localType) return false
-      // Some native cursors omit source hints. In that case only a unique identity is accepted.
-      if (ref.dbPath && row._db_path && String(row._db_path).replace(/\\/g, '/').toLowerCase() !== ref.dbPath.replace(/\\/g, '/').toLowerCase()) return false
+      // Missing source hints require a matching full server ID, never a local-ID fallback.
+      if (ref.dbPath && !row._db_path && !hasServerIdentity) return false
+      if (ref.tableName && !row.table_name && !hasServerIdentity) return false
+      if (ref.dbPath && row._db_path && normalizeSourcePath(String(row._db_path)) !== normalizeSourcePath(ref.dbPath)) return false
       if (ref.tableName && row.table_name && row.table_name !== ref.tableName) return false
       return true
     })

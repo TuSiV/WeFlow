@@ -60,6 +60,8 @@ async function main() {
   assert.throws(() => selectExportMessages(rows, [{localId:1, createTime:100}]), /歧义/)
   assert.throws(() => selectExportMessages(rows, [{localId:1, createTime:100, dbPath:'C:/missing.db'}]), /无法读取/)
   assert.throws(() => selectExportMessages(rows, [{localId:9, createTime:100}]), /无法读取/)
+  assert.throws(() => selectExportMessages([{localId:4,createTime:100,serverIdRaw:'0'}], [{localId:4,createTime:100,dbPath:'C:/a.db'}]), /无法读取/)
+  assert.throws(() => selectExportMessages([{localId:4,createTime:100,_db_path:'/tmp/A.db'}], [{localId:4,createTime:100,dbPath:'/tmp/a.db'}]), /无法读取/)
   assert.throws(() => selectExportMessages(rows, []), /至少选择/)
   assert.throws(() => selectExportMessages(rows, [{localId:0, createTime:100}]), /标识无效/)
   // Test the actual collection bridge, including narrowing cursor reads and retaining only exact rows.
