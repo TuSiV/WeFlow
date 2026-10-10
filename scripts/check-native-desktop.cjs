@@ -168,22 +168,21 @@ if (!process.versions.electron) {
   const completionMarker = path.join(temporary, 'all-native-checks-completed.json')
   const allChecksCompleted = child.status === 0 && fs.existsSync(completionMarker)
   process.exitCode = allChecksCompleted ? 0 : (child.status || 1)
-  if (!allChecksCompleted) console.error('Native host did not complete all assertions; refusing to accept a premature clean exit.')
+  if (!allChecksCompleted) console.error('Native host did not complete all assertions; refusing to accept a premature clean exit.', { status: child.status, signal: child.signal, markerExists: fs.existsSync(completionMarker) })
   try { fs.rmSync(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }) }
   catch (error) { console.warn('Temporary cleanup failed:', String(error)) }
 } else {
   const { app } = require('electron')
   // PDF checks close and reopen hidden windows. Keep the test host alive between them.
   app.on('window-all-closed', () => {})
-  // This headless test has no application lifecycle to close. Exit the test
-  // process directly after its assertions and cleanup, avoiding Electron's
-  // GUI shutdown path while native libraries have been loaded.
+  // Let Electron own process termination. Node process.exit can tear down the
+  // native host while Chromium threads are still active on macOS.
   app.whenReady().then(main).then(() => {
     fs.writeFileSync(path.join(process.env.WEFLOW_NATIVE_TEST_TEMP, 'all-native-checks-completed.json'), JSON.stringify({ completed: true }))
     console.log('Native test cleanup completed; exiting test host.')
-    process.exit(0)
+    app.exit(0)
   }).catch(error => {
     console.error(error)
-    process.exit(1)
+    app.exit(1)
   })
 }
