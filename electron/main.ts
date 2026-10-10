@@ -9,6 +9,7 @@ import { autoUpdater } from 'electron-updater'
 import { readFile, writeFile, mkdir, rm, readdir, copyFile } from 'fs/promises'
 import { appendFileSync, existsSync, mkdirSync } from 'fs'
 import { ConfigService } from './services/config'
+import { discoverAccounts, defaultAccountRoots } from './services/accountDiscovery'
 import { wcdbService } from './services/wcdbService'
 import { chatService } from './services/chatService'
 import { imageDecryptService } from './services/imageDecryptService'
@@ -3504,7 +3505,13 @@ function registerIpcHandlers() {
     }
   })
 
-  // 账号目录相关（纯手动输入：只做存在性校验，不做任何自动扫描/猜测）
+  // 账号目录扫描：只读取数据目录结构，不解密数据库或获取密钥。
+  ipcMain.handle('account:scan', async (_, dbPath?: string) => {
+    if (dbPath !== undefined && typeof dbPath !== 'string') throw new Error('数据库目录必须为字符串')
+    const roots = dbPath?.trim() ? [dbPath.trim()] : await defaultAccountRoots(
+      app.getPath('documents'), app.getPath('home'), process.env.APPDATA)
+    return discoverAccounts(roots)
+  })
   ipcMain.handle('account:resolveDir', async (_, dbPath: string, accountId?: string) => {
     const dbPathExists = Boolean(dbPath) && existsSync(dbPath)
     if (!dbPathExists) return { dbPathExists: false }

@@ -23,11 +23,12 @@ const steps = [
   { id: 'intro', title: '欢迎', desc: '准备开始你的本地数据探索' },
   { id: 'db', title: '数据库目录', desc: '定位数据根目录' },
   { id: 'cache', title: '缓存目录', desc: '设置本地缓存存储位置（可选）' },
-  { id: 'key', title: '解密密钥', desc: '获取密钥并填写账号 ID' },
+  { id: 'key', title: '解密密钥', desc: '选择账号并获取密钥' },
   { id: 'image', title: '图片密钥', desc: '获取 XOR 与 AES 密钥' },
   { id: 'security', title: '安全防护', desc: '保护你的数据' }
 ]
 type SetupStepId = typeof steps[number]['id']
+type DiscoveredAccount = Awaited<ReturnType<Window['electronAPI']['account']['scan']>>['accounts'][number]
 type ImageKeyResolveSource = 'manual-cache' | 'prefetch-cache' | 'memory-scan'
 
 interface WelcomePageProps {
@@ -75,6 +76,11 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
   const [imageAesKey, setImageAesKey] = useState('')
   const [cachePath, setCachePath] = useState('')
   const [accountId, setAccountId] = useState('')
+  const [discoveredAccounts, setDiscoveredAccounts] = useState<DiscoveredAccount[]>([])
+  const [isScanningAccounts, setIsScanningAccounts] = useState(false)
+  const [accountScanMessage, setAccountScanMessage] = useState('')
+  const [scanDefaults, setScanDefaults] = useState(false)
+  const [scanRevision, setScanRevision] = useState(0)
   const [error, setError] = useState('')
   const [isConnecting, setIsConnecting] = useState(false)
   const [isFetchingDbKey, setIsFetchingDbKey] = useState(false)
@@ -187,7 +193,6 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
   }, [isDbConnected, standalone, navigate])
 
   useEffect(() => {
-    setAccountId('')
     setIsImageKeyVerified(false)
     setIsImageStepAutoCompleted(false)
     if (isAddAccountMode) {
@@ -288,7 +293,79 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
   }
   const dbPathValidationError = validatePath(dbPath)
 
+  const invalidateAccountKeys = () => {
+    setDecryptKey('')
+    setImageXorKey('')
+    setImageAesKey('')
+    setHasReacquiredDbKey(false)
+    setIsImageKeyVerified(false)
+    setIsImageStepAutoCompleted(false)
+    imagePrefetchAttemptRef.current = ''
+    imageAutoAttemptRef.current = ''
+  }
+
+  const selectDiscoveredAccount = (account: DiscoveredAccount) => {
+    if (!account.supported || isFetchingDbKey || isFetchingImageKey) return
+    if (account.dbPath !== dbPath || account.accountId !== accountId) invalidateAccountKeys()
+    setDbPath(account.dbPath)
+    setAccountId(account.accountId)
+    setScanDefaults(false)
+    setError(validatePath(account.dbPath) || '')
+  }
+
+  useEffect(() => {
+    if (!['db', 'key'].includes(currentStep.id) || isFetchingDbKey || isFetchingImageKey) return
+    let cancelled = false
+    setDiscoveredAccounts([])
+    setIsScanningAccounts(true)
+    setAccountScanMessage('正在扫描本机微信数据目录…')
+    const timer = setTimeout(() => {
+      window.electronAPI.account.scan(scanDefaults ? undefined : dbPath || undefined).then(result => {
+        if (cancelled) return
+        setDiscoveredAccounts(result.accounts)
+        const available = result.accounts.filter(account => account.supported).length
+        setAccountScanMessage(available ? `发现 ${available} 个可用账号，请选择。`
+          : result.accounts.length ? '发现旧版微信数据；当前数据库组件不支持直接连接此格式，请选择新版数据目录。'
+          : '未找到可用账号。请在微信设置中查看存储位置，点击“浏览”选择目录后重试。')
+        if (result.warnings.length) setAccountScanMessage(message => `${message} ${result.warnings.join('；')}`)
+      }).catch(() => {
+        if (!cancelled) setAccountScanMessage('扫描失败，请重新扫描或手动填写目录与账号 ID。')
+      }).finally(() => { if (!cancelled) setIsScanningAccounts(false) })
+    }, 300)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [dbPath, currentStep.id, scanDefaults, scanRevision, isFetchingDbKey, isFetchingImageKey])
+
+  const accountChooser = (
+    <div className="account-discovery">
+      <div className="action-row">
+        <button type="button" className="btn btn-secondary" disabled={isScanningAccounts || isFetchingDbKey || isFetchingImageKey}
+          onClick={() => { setScanDefaults(true); setScanRevision(value => value + 1) }}>
+          <RotateCcw size={16} /> 扫描本机账号
+        </button>
+        {dbPath && <button type="button" className="btn btn-secondary" disabled={isScanningAccounts || isFetchingDbKey || isFetchingImageKey}
+          onClick={() => { setScanDefaults(false); setScanRevision(value => value + 1) }}>扫描当前目录</button>}
+      </div>
+      <div className="field-hint" role="status">{accountScanMessage}</div>
+      <div className="account-discovery-list">
+        {discoveredAccounts.map(account => (
+          <button type="button" key={account.accountDir}
+            className={`account-discovery-item${account.dbPath === dbPath && account.accountId === accountId ? ' selected' : ''}`}
+            aria-pressed={account.dbPath === dbPath && account.accountId === accountId}
+            disabled={!account.supported || isFetchingDbKey || isFetchingImageKey}
+            onClick={() => selectDiscoveredAccount(account)}>
+            <strong>{account.accountId}</strong>
+            <span>{account.supported ? '新版数据库' : '旧版数据库（暂不支持）'}</span>
+            <small>{account.accountDir}</small>
+          </button>
+        ))}
+      </div>
+      <div className="field-hint">列表按本地数据目录识别；不代表当前登录账号。选择后会自动填写目录和账号 ID。</div>
+    </div>
+  )
+
   const handleDbPathChange = (value: string) => {
+    if (value !== dbPath) { setAccountId(''); invalidateAccountKeys() }
+    setScanDefaults(false)
     setDbPath(value)
     const validationError = validatePath(value)
     if (validationError) {
@@ -310,7 +387,7 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
       if (!result.canceled && result.filePaths.length > 0) {
         const selectedPath = result.filePaths[0]
         const validationError = validatePath(selectedPath)
-        setDbPath(selectedPath)
+        handleDbPathChange(selectedPath)
         if (validationError) {
           setError(validationError)
         } else {
@@ -340,6 +417,7 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
 
   const handleAutoGetDbKey = async () => {
     if (isFetchingDbKey) return
+    if (!dbPath || !accountId.trim()) { setError('请先选择账号，或手动填写数据目录和账号 ID'); return }
     setShowDbKeyConfirm(true)
   }
 
@@ -361,10 +439,15 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
         error: result.error
       })
       if (result.success && result.key) {
-        setDecryptKey(result.key)
-        if (result.accountId) {
-          setAccountId(result.accountId)
+        const verification = await window.electronAPI.wcdb.testConnection(dbPath, result.key, accountId)
+        if (!verification.success) {
+          setDecryptKey('')
+          setHasReacquiredDbKey(false)
+          setError(`获取的密钥无法打开所选账号，请确认微信登录账号与选择一致。${verification.error || ''}`)
+          setDbKeyStatus('所选账号密钥校验失败')
+          return
         }
+        setDecryptKey(result.key)
         setHasReacquiredDbKey(true)
         setDbKeyStatus('密钥获取成功')
         setError('')
@@ -846,6 +929,7 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
                     className="field-input"
                     placeholder={dbPathPlaceholder}
                     value={dbPath}
+                    disabled={isFetchingDbKey || isFetchingImageKey}
                     onChange={(e) => handleDbPathChange(e.target.value)}
                   />
                 </div>
@@ -855,7 +939,8 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
                   </button>
                 </div>
 
-                <div className="field-hint">请选择目标应用设置里的存储位置对应的目录</div>
+                <div className="field-hint">请选择微信设置里的存储位置；也可直接选择账号目录。</div>
+                {accountChooser}
               </div>
             )}
 
@@ -885,14 +970,16 @@ function WelcomePage({ standalone = false }: WelcomePageProps) {
 
             {currentStep.id === 'key' && (
               <div className="form-group">
-                <label className="field-label">账号 ID</label>
+                {accountChooser}
+                <label className="field-label">账号 ID（可手动填写）</label>
                 <div className="input-group">
                   <input
                     type="text"
                     className="field-input"
                     placeholder="请输入账号 ID"
                     value={accountId}
-                    onChange={(e) => setAccountId(e.target.value)}
+                    disabled={isFetchingDbKey || isFetchingImageKey}
+                    onChange={(e) => { invalidateAccountKeys(); setAccountId(e.target.value) }}
                   />
                 </div>
 

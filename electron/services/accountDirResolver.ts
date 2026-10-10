@@ -63,6 +63,13 @@ export const resolveAccountDir = (dbPath?: string, accountId?: string): string |
   const normalized = dbPath.replace(/[\\/]+$/, '')
   const cacheKey = `${normalized}|${cleanedAccountId.toLowerCase()}`
 
+  // Preserve an explicitly selected full account directory, including suffix.
+  const exactName = accountId.trim()
+  if (exactName !== '.' && exactName !== '..' && !/[\\/]/.test(exactName)) {
+    const exactPath = join(normalized, exactName)
+    if (isDirectory(exactPath) && accountDirHasSessionDb(exactPath)) return exactPath
+  }
+
   // 命中缓存且目标仍存在则直接返回；目标已被删除的过期缓存项会被剔除
   const cached = accountDirCache.get(cacheKey)
   if (cached && existsSync(cached)) return cached

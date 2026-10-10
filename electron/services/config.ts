@@ -1125,6 +1125,13 @@ export class ConfigService {
     const normalized = actualDbPath.replace(/[\\/]+$/, '')
     const cacheKey = `${normalized}|${cleanedAccountId.toLowerCase()}`
 
+    // Preserve an explicitly selected full account directory, including suffix.
+    const exactName = actualAccountId.trim()
+    if (exactName !== '.' && exactName !== '..' && !/[\\/]/.test(exactName)) {
+      const exactPath = join(normalized, exactName)
+      if (this.isDirectory(exactPath) && this.accountDirHasSessionDb(exactPath)) return exactPath
+    }
+
     // 命中缓存且目标仍存在则直接返回；目标已被删除的过期缓存项会被剔除
     const cached = this.accountDirCache.get(cacheKey)
     if (cached && existsSync(cached)) return cached

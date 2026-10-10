@@ -693,6 +693,11 @@ export interface ElectronAPI {
     }>
   }
   account: {
+    scan: (dbPath?: string) => Promise<{
+      accounts: { accountId: string; accountDir: string; dbPath: string; layout: 'wcdb4' | 'legacy3'; supported: boolean }[]
+      searchedPaths: string[]
+      warnings: string[]
+    }>
     resolveDir: (dbPath: string, accountId?: string) => Promise<{ dbPathExists: boolean; accountDir?: string }>
   }
   wcdb: {

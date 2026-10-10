@@ -171,6 +171,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // 账号目录（纯手动输入，只做存在性校验）
   account: {
+    scan: (dbPath?: string) => ipcRenderer.invoke('account:scan', dbPath),
     resolveDir: (dbPath: string, accountId?: string) =>
       ipcRenderer.invoke('account:resolveDir', dbPath, accountId)
   },

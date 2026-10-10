@@ -54,6 +54,18 @@ async function main() {
       entryPoints: [path.join(root, 'electron/services/wcdbCore.ts')],
       bundle: true, platform: 'node', format: 'cjs', packages: 'external', write: false
     }).outputFiles[0].text, __filename)
+    const discoveryModule = new Module(__filename, module)
+    discoveryModule.paths = module.paths
+    discoveryModule._compile(require('esbuild').buildSync({
+      entryPoints: [path.join(root, 'electron/services/accountDiscovery.ts')],
+      bundle: true, platform: 'node', format: 'cjs', write: false
+    }).outputFiles[0].text, __filename)
+    const scan = await discoveryModule.exports.discoverAccounts([temporary])
+    assert.equal(scan.accounts.length, 1)
+    assert.equal(scan.accounts[0].accountId, 'synthetic_me')
+    assert.equal(scan.accounts[0].dbPath, temporary)
+    assert.equal(scan.accounts[0].supported, true)
+    console.log('Native fixture account discovery passed.')
     const core = new coreModule.exports.WcdbCore()
     core.setPaths(root, temporary)
     core.setLibPath(path.join(root, 'resources/wcdb/win32/x64/wcdb_api.dll'))
@@ -115,6 +127,7 @@ async function main() {
       clearTimeout(timeout)
       await worker.terminate()
     }
+    await require('./check-account-chooser-windows.cjs')(root, temporary)
     console.log('Native application binding, encrypted session/message reads, image decrypt and source HTML export passed.')
     console.log('Real-account key acquisition and real-account chat export are not tested by this check.')
   } finally {
