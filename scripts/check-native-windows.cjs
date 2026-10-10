@@ -66,6 +66,7 @@ async function main() {
     assert.equal(scan.accounts[0].dbPath, temporary)
     assert.equal(scan.accounts[0].supported, true)
     console.log('Native fixture account discovery passed.')
+    let selectedRef
     const core = new coreModule.exports.WcdbCore()
     core.setPaths(root, temporary)
     core.setLibPath(path.join(root, 'resources/wcdb/win32/x64/wcdb_api.dll'))
@@ -89,6 +90,8 @@ async function main() {
       console.log('Synthetic messages:', JSON.stringify(messages))
       assert.equal(messages.success, true)
       assert(JSON.stringify(messages).includes(fixture.message))
+      const row = messages.messages[0]
+      selectedRef = {localId:Number(row.local_id),createTime:Number(row.create_time),serverIdRaw:String(row.server_id || '0'),localType:Number(row.local_type)}
     } finally { core.close() }
     const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000b49444154789c636000020000050001a5f645400000000049454e44ae426082', 'hex')
     const dat = path.join(temporary, 'fixture.dat')
@@ -127,6 +130,11 @@ async function main() {
       clearTimeout(timeout)
       await worker.terminate()
     }
+    await require('./check-chat-export-windows.cjs')(root, temporary, {
+      sessionIds:[fixture.sessionId], dbPath:temporary, accountDir, decryptKey:fixture.dbKey, myAccountId:'synthetic_me',
+      resourcesPath:path.join(root,'resources'), userDataPath:temporary,
+      wcdbLibPath:path.join(root,'resources/wcdb/win32/x64/wcdb_api.dll'), expectedText:fixture.message
+    }, selectedRef)
     await require('./check-account-chooser-windows.cjs')(root, temporary)
     console.log('Native application binding, encrypted session/message reads, image decrypt and source HTML export passed.')
     console.log('Real-account key acquisition and real-account chat export are not tested by this check.')
@@ -143,7 +151,7 @@ if (!process.versions.electron) {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'weflow-native-'))
   environment.WEFLOW_NATIVE_TEST_TEMP = temporary
   const child = spawnSync(require('electron'), [__filename], {
-    env: environment, stdio: 'inherit', timeout: 60000
+    env: environment, stdio: 'inherit', timeout: 180000
   })
   if (child.error) console.error(child.error)
   process.exitCode = child.status ?? 1

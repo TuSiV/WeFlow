@@ -121,8 +121,29 @@ function queueProgress(progress: any) {
   progressPostTimer = setTimeout(flushProgress, PROGRESS_POST_INTERVAL_MS - elapsed)
 }
 
+let pdfRequestSequence = 0
+const pendingPdfRequests = new Map<number, { resolve: () => void; reject: (error: Error) => void; timeout: NodeJS.Timeout }>()
+function requestPdfRendering(htmlPath: string, pdfPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const requestId = ++pdfRequestSequence
+    const timeout = setTimeout(() => { pendingPdfRequests.delete(requestId); reject(new Error('PDF 渲染服务响应超时')) }, 180000)
+    pendingPdfRequests.set(requestId, { resolve, reject, timeout })
+    parentPort?.postMessage({ type: 'export:renderPdf', requestId, htmlPath, pdfPath })
+  })
+}
+
 parentPort?.on('message', (message: any) => {
   if (!message || typeof message.type !== 'string') return
+  if (message.type === 'export:pdfResult') {
+    const request = pendingPdfRequests.get(message.requestId)
+    if (request) {
+      pendingPdfRequests.delete(message.requestId)
+      clearTimeout(request.timeout)
+      if (message.error) request.reject(new Error(message.error))
+      else request.resolve()
+    }
+    return
+  }
   if (message.type === 'export:pause') {
     controlState.pauseRequested = true
     return
@@ -315,6 +336,7 @@ async function runExportEngine() {
   const fs = require('fs') as typeof import('fs')
   const os = require('os') as typeof import('os')
   const { exportService } = await import('./services/export')
+  exportService.context.renderPdf = requestPdfRendering
   const { wcdbService } = await import('./services/wcdbService')
   const {
     buildSessionExportBaseName,
@@ -324,6 +346,7 @@ async function runExportEngine() {
   const sessionIds = config.mode === 'single'
     ? [String(config.sessionId || '').trim()].filter(Boolean)
     : (Array.isArray(config.sessionIds) ? config.sessionIds : []).map((id) => String(id || '').trim()).filter(Boolean)
+  if (config.options?.selectedMessages && sessionIds.length !== 1) throw new Error('选定消息导出只能包含一个会话')
   const outputDir = String(config.outputDir || (config.outputPath ? path.dirname(config.outputPath) : '') || '').trim()
   const rawRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'weflow-welive-raw-'))
 
@@ -347,7 +370,7 @@ async function runExportEngine() {
   const effectiveOptions = exportService.context.isMediaContentBatchExport(normalizedOptions)
     ? { ...normalizedOptions, exportVoiceAsText: false }
     : normalizedOptions
-  const useWelive = Boolean(String(config.welivePath || '').trim())
+  const useWelive = !options.selectedMessages && Boolean(String(config.welivePath || '').trim())
   const connection = await exportService.context.ensureConnected().catch(error => ({ success: false, error: String(error) }))
   if (!useWelive && !connection?.success) throw new Error(connection?.error || '数据库连接失败')
   const exportMediaEnabled = exportService.context.isMediaExportEnabled(effectiveOptions)
@@ -368,6 +391,7 @@ async function runExportEngine() {
     if (format === 'markdown') return '.md'
     if (format === 'weclone') return '.csv'
     if (format === 'html') return '.html'
+    if (format === 'pdf') return '.pdf'
     if (format === 'sql') return '.sql'
     return '.json'
   }
@@ -601,6 +625,9 @@ async function runExportEngine() {
       }
       if (format === 'weclone') {
         return await exportService.orchestrator.exportSessionToWeCloneCsv(sessionId, outputPath, options, queueProgress, taskControl)
+      }
+      if (format === 'pdf') {
+        return await exportService.orchestrator.exportSessionToPdf(sessionId, outputPath, options, queueProgress, taskControl)
       }
       if (format === 'html') {
         return await exportService.orchestrator.exportSessionToHtml(sessionId, outputPath, options, queueProgress, taskControl)

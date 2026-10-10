@@ -7435,10 +7435,20 @@ function ChatPage(props: ChatPageProps) {
     setShowBatchDecryptConfirm(true)
   }, [currentSessionId, isBatchDecrypting, sessions])
 
-  const handleExportCurrentSession = useCallback(() => {
+  const handleExportCurrentSession = useCallback((exportSelected = false) => {
     if (!currentSessionId) return
     if (inProgressExportSessionIds.has(currentSessionId) || isPreparingExportDialog) return
 
+    const selectedForExport = exportSelected
+      ? messages.filter(message => selectedMessages.has(getMessageKey(message))).map(message => ({
+          localId: message.localId, createTime: message.createTime, serverIdRaw: message.serverIdRaw,
+          localType: message.localType, dbPath: message._db_path, tableName: message._table_name
+        }))
+      : undefined
+    if (exportSelected && (!selectedForExport?.length || selectedForExport.length !== selectedMessages.size)) {
+      alert('部分所选消息不在当前列表中，请刷新后重新选择')
+      return
+    }
     const requestId = `chat-export-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const sessionName = displayNameOrFallback(currentSessionId, currentSession?.displayName, currentSession?.username)
     pendingExportRequestIdRef.current = requestId
@@ -7451,9 +7461,10 @@ function ChatPage(props: ChatPageProps) {
     emitOpenSingleExport({
       sessionId: currentSessionId,
       sessionName,
-      requestId
+      requestId,
+      selectedMessages: selectedForExport
     })
-  }, [currentSession, currentSessionId, inProgressExportSessionIds, isPreparingExportDialog])
+  }, [currentSession, currentSessionId, inProgressExportSessionIds, isPreparingExportDialog, messages, selectedMessages, getMessageKey])
 
   const handleTriggerSessionInsight = useCallback(async () => {
     const session = currentSession
@@ -9016,7 +9027,7 @@ function ChatPage(props: ChatPageProps) {
                 onToggleGroupSummaryPanel={toggleGroupSummaryPanel}
                 onGroupAnalytics={handleGroupAnalytics}
                 onToggleGroupMembersPanel={toggleGroupMembersPanel}
-                onExportCurrentSession={handleExportCurrentSession}
+                onExportCurrentSession={() => handleExportCurrentSession()}
                 onOpenSnsTimeline={openCurrentSessionSnsTimeline}
                 onBatchTranscribe={handleBatchTranscribe}
                 onBatchDecrypt={handleBatchDecrypt}
@@ -10489,6 +10500,10 @@ function ChatPage(props: ChatPageProps) {
           backdropFilter: 'blur(10px)'
         }}>
           <span style={{ fontSize: '14px', fontWeight: 500 }}>已选 {selectedMessages.size} 条</span>
+          <button className="btn-secondary" disabled={!selectedMessages.size || isPreparingExportDialog || (currentSessionId ? inProgressExportSessionIds.has(currentSessionId) : true)}
+            onClick={() => handleExportCurrentSession(true)} style={{ padding: '6px 16px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            导出选定消息
+          </button>
           <div style={{ width: '1px', height: '16px', background: 'var(--border-color)' }}></div>
           <button
             className="btn-danger"

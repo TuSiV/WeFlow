@@ -19,6 +19,7 @@ import {
     MediaSourceResolution,
     MessageCollectMode,
 } from '../types';
+import { selectExportMessages } from '../../../../shared/exportSelection'
 import { parallelLimit } from '../utils/parallelLimit';
 import { FILE_APP_LOCAL_TYPES, FILE_APP_LOCAL_TYPE_SET, MESSAGE_TYPE_MAP, TXT_COLUMN_DEFINITIONS } from '../constants';
 import * as fs from 'fs'
@@ -4454,6 +4455,7 @@ export class ExportContext {
             rows.push({
               sessionId,
               session_id: sessionId,
+              _db_path: row._db_path || row.db_path, table_name: row.table_name,
               localId: this.getIntFromRow(row, ['local_id', 'localId', 'LocalId', 'msg_local_id', 'msgLocalId', 'MsgLocalId', 'msg_id', 'msgId', 'MsgId', 'id', 'WCDB_CT_local_id'], 0),
               serverId: this.getIntFromRow(row, ['server_id', 'serverId', 'ServerId', 'msg_server_id', 'msgServerId', 'MsgServerId', 'svr_id', 'svrId', 'msg_svr_id', 'msgSvrId', 'MsgSvrId', 'WCDB_CT_server_id'], 0),
               serverIdRaw: this.normalizeUnsignedIntToken(this.getRowField(row, ['server_id', 'serverId', 'ServerId', 'msg_server_id', 'msgServerId', 'MsgServerId', 'svr_id', 'svrId', 'msg_svr_id', 'msgSvrId', 'MsgSvrId', 'WCDB_CT_server_id'])) || undefined,
@@ -4544,6 +4546,22 @@ export class ExportContext {
         }
 
         return { rows, memberSet, firstTime, lastTime }
+    }
+
+    public renderPdf?: (htmlPath: string, pdfPath: string) => Promise<void>
+
+    public async collectMessagesForExport(sessionId: string, cleanedMyAccountId: string, options: ExportOptions, control?: ExportTaskControl, onCollectProgress?: (payload: { fetched: number; done?: boolean }) => void) {
+        const params = this.resolveCollectParams(options)
+        const selection = options.selectedMessages
+        const range = selection?.length ? {
+          start: selection.reduce((value, message) => Math.min(value, message.createTime), Infinity),
+          end: selection.reduce((value, message) => Math.max(value, message.createTime), 0)
+        } : options.dateRange
+        const collected = await this.collectMessages(sessionId, cleanedMyAccountId, range, options.senderUsername,
+          selection ? 'full' : params.mode, selection ? undefined : params.targetMediaTypes, control, onCollectProgress)
+        if (!selection) return collected
+        const rows = selectExportMessages(collected.rows, selection)
+        return { ...collected, rows, firstTime: rows[0]?.createTime ?? null, lastTime: rows[rows.length - 1]?.createTime ?? null }
     }
 
     public async collectMessages(sessionId: string, cleanedMyAccountId: string, dateRange?: { start: number; end: number } | null, senderUsernameFilter?: string, collectMode: MessageCollectMode = 'full', targetMediaTypes?: Set<number>, control?: ExportTaskControl, onCollectProgress?: (payload: { fetched: number; done?: boolean }) => void, _legacyCursorFallbackFlag = true, allowRangeFallback = true, useCursorTimeRange = true, allowModeFallback = true): Promise<{ rows: any[]; memberSet: Map<string, { member: ChatLabMember; avatarUrl?: string }>; firstTime: number | null; lastTime: number | null; error?: string }> {
@@ -4715,6 +4733,7 @@ export class ExportContext {
 
               if (collectMode === 'text-fast') {
                 rows.push({
+                  _db_path: row._db_path || row.db_path, table_name: row.table_name,
                   localId,
                   serverId,
                   serverIdRaw: serverIdRaw !== '0' ? serverIdRaw : undefined,
@@ -4815,6 +4834,7 @@ export class ExportContext {
               }
 
               rows.push({
+                _db_path: row._db_path || row.db_path, table_name: row.table_name,
                 localId,
                 serverId,
                 serverIdRaw: serverIdRaw !== '0' ? serverIdRaw : undefined,

@@ -1,6 +1,7 @@
 import './preload-env'
 import { app, BrowserWindow, ipcMain, nativeTheme, Tray, Menu, nativeImage, shell } from 'electron'
 import { Worker } from 'worker_threads'
+import { handlePdfExportRequest } from './services/pdfExportService'
 import { fork, type ChildProcess, type ForkOptions } from 'child_process'
 import { createHash, randomUUID } from 'crypto'
 import { join, dirname } from 'path'
@@ -4609,6 +4610,7 @@ function registerIpcHandlers() {
         }
 
         worker.on('message', (msg: any) => {
+          if (handlePdfExportRequest(worker, msg)) return
           if (msg && msg.type === 'export:progress') {
             onProgress(msg.data as ExportProgress)
             return
@@ -4740,6 +4742,7 @@ function registerIpcHandlers() {
         }
 
         worker.on('message', (msg: any) => {
+          if (handlePdfExportRequest(worker, msg)) return
           if (msg && msg.type === 'export:progress') {
             if (!event.sender.isDestroyed()) {
               event.sender.send('export:progress', msg.data)

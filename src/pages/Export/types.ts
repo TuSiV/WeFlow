@@ -39,6 +39,7 @@ export type TextExportFormat =
   | 'json'
   | 'arkme-json'
   | 'html'
+  | 'pdf'
   | 'markdown'
   | 'txt'
   | 'excel'
@@ -169,6 +170,7 @@ export interface ExportTask {
 // ─── Export Dialog ────────────────────────────────────────────
 
 export interface ExportDialogState {
+  selectedMessages?: import('../../../shared/exportSelection').ExportMessageRef[]
   open: boolean
   intent: 'manual' | 'automation-create'
   scope: TaskScope

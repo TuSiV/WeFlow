@@ -39,17 +39,9 @@ export class MarkdownFormatter {
         phase: 'preparing'
       })
 
-      const collectParams = this.exportService.resolveCollectParams(options)
       const collectProgressReporter = this.exportService.createCollectProgressReporter(sessionInfo.displayName, onProgress, 5)
-      const collected = await this.exportService.collectMessages(
-        sessionId,
-        cleanedMyAccountId,
-        options.dateRange,
-        options.senderUsername,
-        collectParams.mode,
-        collectParams.targetMediaTypes,
-        control,
-        collectProgressReporter
+      const collected = await this.exportService.collectMessagesForExport(
+        sessionId, cleanedMyAccountId, options, control, collectProgressReporter
       )
       const totalMessages = collected.rows.length
 

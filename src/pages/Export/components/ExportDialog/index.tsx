@@ -52,10 +52,10 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
 
   useEffect(() => {
     if (!dialogState.open) return
-    setDraftOptions(options)
+    setDraftOptions(dialogState.selectedMessages ? { ...options, format: 'pdf', useAllTime: true, dateRange: null } : options)
     setDraftDateRangeConfig(rawDateRangeConfig)
     setIsDateRangeOpen(false)
-  }, [dialogState.open, options, rawDateRangeConfig])
+  }, [dialogState.open, dialogState.selectedMessages, options, rawDateRangeConfig])
 
   const currentSelection = React.useMemo(() => {
     return resolveExportDateRangeConfig(draftDateRangeConfig)
@@ -139,13 +139,14 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
             
             <div className="config-row-group">
               <div className="config-row">
-                <span className="row-label">时间范围</span>
+                <span className="row-label">{dialogState.selectedMessages ? '消息范围' : '时间范围'}</span>
                 <button 
                   className="row-value-btn"
+                  disabled={!!dialogState.selectedMessages}
                   onClick={() => setIsDateRangeOpen(true)}
                 >
                   <Calendar size={14} className="icon" />
-                  <span className="text">{dateRangeLabel}</span>
+                  <span className="text">{dialogState.selectedMessages ? `仅导出勾选的 ${dialogState.selectedMessages.length} 条消息` : dateRangeLabel}</span>
                   <span className="arrow">&gt;</span>
                 </button>
               </div>

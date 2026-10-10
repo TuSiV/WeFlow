@@ -2,6 +2,7 @@ export interface OpenSingleExportPayload {
   sessionId: string
   sessionName?: string
   requestId?: string
+  selectedMessages?: import('../../shared/exportSelection').ExportMessageRef[]
 }
 
 export interface ExportSessionStatusPayload {

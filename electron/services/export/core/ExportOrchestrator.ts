@@ -154,6 +154,27 @@ export class ExportOrchestrator {
         return this.exportAtomically(outputPath, control, (temporaryPath, temporaryControl) => formatter.export(sessionId, temporaryPath, options, onProgress, temporaryControl));
     }
 
+    async exportSessionToPdf(sessionId: string, outputPath: string, options: ExportOptions, onProgress?: (progress: ExportProgress) => void, control?: ExportTaskControl): Promise<{ success: boolean; error?: string }> {
+        return this.exportAtomically(outputPath, control, async (temporaryPath, temporaryControl) => {
+          if (!this.context.renderPdf) throw new Error('PDF 渲染服务不可用')
+          const htmlPath = `${temporaryPath}.html`
+          this.context.registerLogicalOutputPath(htmlPath, outputPath)
+          try {
+            const html = await new HtmlFormatter(this.context).export(sessionId, htmlPath, { ...options, format: 'pdf' },
+              onProgress ? (progress: ExportProgress) => onProgress({ ...progress, phase: 'writing', phaseLabel: '生成 PDF', current: Math.min(95, progress.current) }) : undefined,
+              temporaryControl)
+            if (!html.success) return html
+            this.context.throwIfStopRequested(control)
+            await this.context.renderPdf(htmlPath, temporaryPath)
+            this.context.throwIfStopRequested(control)
+            return { success: true }
+          } finally {
+            this.context.unregisterLogicalOutputPath(htmlPath)
+            await fs.promises.rm(htmlPath, { force: true }).catch(() => undefined)
+          }
+        })
+    }
+
     /**
      * 导出单个会话为 Markdown 格式
      */
@@ -255,7 +276,7 @@ export class ExportOrchestrator {
             ? Math.floor(effectiveOptions.exportConcurrency)
             : defaultConcurrency
           const maxSessionConcurrency = isTextContentBatchExport ? 1 : 6
-          const clampedConcurrency = Math.max(1, Math.min(rawConcurrency, maxSessionConcurrency))
+          const clampedConcurrency = effectiveOptions.format === 'pdf' ? 1 : Math.max(1, Math.min(rawConcurrency, maxSessionConcurrency))
           const sessionConcurrency = clampedConcurrency
           const queue = [...sessionIds]
           let pauseRequested = false
@@ -276,7 +297,8 @@ export class ExportOrchestrator {
           }
           const canUseSessionSnapshotHints = isTextContentBatchExport &&
             this.context.isUnboundedDateRange(effectiveOptions.dateRange) &&
-            !String(effectiveOptions.senderUsername || '').trim()
+            !String(effectiveOptions.senderUsername || '').trim() &&
+            !effectiveOptions.selectedMessages
           const canFastSkipEmptySessions = false
           const canTrySkipUnchangedTextSessions = canUseSessionSnapshotHints && conflictStrategy === 'incremental'
           const precheckSessionIds = canFastSkipEmptySessions
@@ -457,6 +479,7 @@ export class ExportOrchestrator {
               else if (effectiveOptions.format === 'markdown') ext = '.md'
               else if (effectiveOptions.format === 'weclone') ext = '.csv'
               else if (effectiveOptions.format === 'html') ext = '.html'
+              else if (effectiveOptions.format === 'pdf') ext = '.pdf'
               else if (effectiveOptions.format === 'sql') ext = '.sql'
               const preferredOutputPath = path.join(sessionDir, `${fileNameWithPrefix}${ext}`)
               const canTrySkipUnchanged = canTrySkipUnchangedTextSessions &&
@@ -526,6 +549,8 @@ export class ExportOrchestrator {
                 result = await this.exportSessionToMarkdown(sessionId, outputPath, effectiveOptions, sessionProgress, control)
               } else if (effectiveOptions.format === 'weclone') {
                 result = await this.exportSessionToWeCloneCsv(sessionId, outputPath, effectiveOptions, sessionProgress, control)
+              } else if (effectiveOptions.format === 'pdf') {
+                result = await this.exportSessionToPdf(sessionId, outputPath, effectiveOptions, sessionProgress, control)
               } else if (effectiveOptions.format === 'html') {
                 result = await this.exportSessionToHtml(sessionId, outputPath, effectiveOptions, sessionProgress, control)
               } else if (effectiveOptions.format === 'sql') {

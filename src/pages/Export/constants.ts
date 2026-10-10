@@ -46,6 +46,7 @@ export const formatOptions: Array<{ value: TextExportFormat; label: string; desc
   { value: 'json', label: 'JSON', desc: '详细格式，包含完整消息信息' },
   { value: 'arkme-json', label: 'Arkme JSON', desc: '紧凑 JSON，支持 sender 去重与关系统计' },
   { value: 'html', label: 'HTML', desc: '网页格式，可直接浏览' },
+  { value: 'pdf', label: 'PDF', desc: '分页文档，适合打印与分享' },
   { value: 'markdown', label: 'Markdown', desc: '支持文本、图片与链接，适合 AI 场景' },
   { value: 'txt', label: 'TXT', desc: '纯文本，通用格式' },
   { value: 'excel', label: 'Excel', desc: '电子表格，适合统计分析' },

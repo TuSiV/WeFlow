@@ -54,17 +54,9 @@ export class HtmlFormatter {
         await this.exportService.ensureVoiceModel(onProgress)
       }
 
-      const collectParams = this.exportService.resolveCollectParams(options)
       const collectProgressReporter = this.exportService.createCollectProgressReporter(sessionInfo.displayName, onProgress, 5)
-      const collected = await this.exportService.collectMessages(
-        sessionId,
-        cleanedMyAccountId,
-        options.dateRange,
-        options.senderUsername,
-        collectParams.mode,
-        collectParams.targetMediaTypes,
-        control,
-        collectProgressReporter
+      const collected = await this.exportService.collectMessagesForExport(
+        sessionId, cleanedMyAccountId, options, control, collectProgressReporter
       )
 
       // 如果没有消息,不创建文件
@@ -148,7 +140,7 @@ export class HtmlFormatter {
               maxFileSizeMb: options.maxFileSizeMb,
               exportVoiceAsText: options.exportVoiceAsText,
               exportConflictStrategy: options.exportConflictStrategy,
-              includeVideoPoster: options.format === 'html',
+              includeVideoPoster: options.format === 'html' || options.format === 'pdf',
               includeVoiceWithTranscript: true,
               exportVideos: options.exportVideos,
               dirCache: mediaDirCache,
@@ -242,7 +234,8 @@ export class HtmlFormatter {
       // ================= BEGIN STREAM WRITING =================
       const exportMeta = this.exportService.getExportMeta(sessionId, sessionInfo, isGroup)
       const htmlStyles = this.exportService.loadExportHtmlStyles()
-      const useExternalChunks = totalMessages > HTML_EXTERNAL_CHUNK_THRESHOLD
+      const isPdf = options.format === 'pdf'
+      const useExternalChunks = !isPdf && totalMessages > HTML_EXTERNAL_CHUNK_THRESHOLD
       const logicalOutputPath = this.exportService.resolveLogicalOutputPath(outputPath)
       const dataDirectoryName = `${path.parse(logicalOutputPath).name}_data`
       const dataDirectoryPath = path.join(path.dirname(logicalOutputPath), dataDirectoryName)
@@ -275,6 +268,22 @@ export class HtmlFormatter {
         })
       }
 
+      if (isPdf) {
+        await writePromise(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8" />
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src file: data:; style-src 'unsafe-inline'; media-src file: data:" />
+          <title>${escapeHtml(sessionInfo.displayName)} - 聊天记录</title><style>${htmlStyles}
+          :root { color-scheme: light; } body { background: white; color: #111; margin: 0; }
+          .page { height: auto; min-height: 0; max-width: none; padding: 0; display: block; }
+          .header { position: static; margin-bottom: 20px; } .message-list { display: block; }
+          .message { display: block; margin-bottom: 14px; break-inside: avoid; }
+          .message-row { align-items: flex-start; } .bubble { box-shadow: none; max-width: 80%; overflow-wrap: anywhere; }
+          .message-content { display: block; } .message-media { max-width: 100%; }
+          video, audio { display: none; } a { color: #174a8b; }
+          @page { size: A4; } </style></head><body>
+          <div class="page"><div class="header"><h1 class="title">${escapeHtml(sessionInfo.displayName)}</h1>
+          <div class="meta">${totalMessages} 条消息 · ${isGroup ? '群聊' : '私聊'} · 导出时间 ${escapeHtml(formatTimestamp(exportMeta.chatlab.exportedAt))}</div></div>
+          <div class="message-list">`)
+      } else {
       await writePromise(`<!DOCTYPE html>
 <html lang="zh-CN">
   <head>
@@ -317,6 +326,7 @@ export class HtmlFormatter {
     <script>
       window.WEFLOW_MANIFEST = ${serializeHtmlScriptJson(chunkManifest)};
       window.WEFLOW_DATA = ${useExternalChunks ? 'null;' : '[\n'}`);
+      }
 
       // Pre-build avatar HTML lookup to avoid per-message rebuilds
       const avatarHtmlCache = new Map<string, string>()
@@ -439,6 +449,10 @@ export class HtmlFormatter {
           mediaHtml = `<a class="message-media file" href="${mediaPath}" target="_blank" rel="noopener noreferrer">${fileName}</a>`
         }
 
+        if (isPdf && mediaItem?.kind === 'voice') mediaHtml = '<div class="message-text">[语音附件]</div>'
+        if (isPdf && mediaItem?.kind === 'video') mediaHtml = mediaItem.posterDataUrl
+          ? `<img class="message-media image" src="${escapeAttribute(mediaItem.posterDataUrl)}" alt="视频封面" /><div class="message-text">[视频附件]</div>`
+          : '<div class="message-text">[视频附件]</div>'
         const textHtml = quotedReplyDisplay
           ? (() => {
             const quotedSenderHtml = quotedReplyDisplay.quotedSender
@@ -474,6 +488,11 @@ export class HtmlFormatter {
         if (platformMessageId) itemObj.p = platformMessageId
         if (replyToMessageId) itemObj.r = replyToMessageId
 
+        if (isPdf) {
+          await writePromise(`<article class="message ${isSenderMe ? 'sent' : 'received'}" data-message-index="${i + 1}">
+            <div class="message-row"><div class="avatar">${avatarHtml.replace(/loading="lazy"/g, 'loading="eager"')}</div>
+            <div class="bubble">${messageBody.replace(/loading="lazy"/g, 'loading="eager"')}</div></div></article>`)
+        } else {
         writeBuf.push(serializeHtmlScriptJson(itemObj))
 
         // Flush buffer periodically
@@ -495,6 +514,8 @@ export class HtmlFormatter {
           writeBuf = []
         }
 
+        }
+
         // Report progress occasionally
         if ((i + 1) % 500 === 0) {
           onProgress?.({
@@ -509,6 +530,9 @@ export class HtmlFormatter {
         }
       }
 
+      if (isPdf) {
+        await writePromise('</div></div></body></html>')
+      } else {
       const dataScriptClose = useExternalChunks ? '' : ']'
       await writePromise(`${dataScriptClose};
     </script>
@@ -665,6 +689,7 @@ export class HtmlFormatter {
     </script>
   </body>
 </html>`);
+      }
 
       return new Promise((resolve, reject) => {
         stream.on('error', (err) => {

@@ -63,10 +63,11 @@ export interface ChatLabExport {
 }
 
 export interface ExportOptions {
-  format: 'chatlab' | 'chatlab-jsonl' | 'json' | 'arkme-json' | 'html' | 'markdown' | 'txt' | 'excel' | 'weclone' | 'sql'
+  format: 'chatlab' | 'chatlab-jsonl' | 'json' | 'arkme-json' | 'html' | 'pdf' | 'markdown' | 'txt' | 'excel' | 'weclone' | 'sql'
   contentType?: 'text' | 'voice' | 'image' | 'video' | 'emoji' | 'file'
   dateRange?: { start: number; end: number } | null
   senderUsername?: string
+  selectedMessages?: import('../../../shared/exportSelection').ExportMessageRef[]
   fileNameSuffix?: string
   fileNamingMode?: 'classic' | 'date-range'
   exportConflictStrategy?: 'incremental' | 'overwrite' | 'rename'

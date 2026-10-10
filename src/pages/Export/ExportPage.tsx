@@ -269,7 +269,8 @@ function ExportPage() {
       scope: 'single',
       sessionIds: [sessionId],
       sessionNames: [sessionName],
-      title: `导出: ${sessionName}`
+      title: payload.selectedMessages ? `导出选定的 ${payload.selectedMessages.length} 条消息: ${sessionName}` : `导出: ${sessionName}`,
+      selectedMessages: payload.selectedMessages
     })
 
     emitSingleExportDialogStatus({ requestId, status: 'opened' })
@@ -293,7 +294,10 @@ function ExportPage() {
       scope: dialogState.scope,
       source: 'manual',
       outputDir: exportPath,
-      options: finalOptions
+      options: dialogState.selectedMessages
+        ? { ...finalOptions, selectedMessages: dialogState.selectedMessages, useAllTime: true, dateRange: null,
+            fileNameSuffix: `选定${dialogState.selectedMessages.length}条`, exportConflictStrategy: 'rename' }
+        : finalOptions
     })
     closeDialog()
   }, [dialogState, exportPath, startTask, closeDialog, updateOptions])
