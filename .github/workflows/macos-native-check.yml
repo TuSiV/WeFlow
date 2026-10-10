@@ -21,12 +21,11 @@ jobs:
         run: npm ci --legacy-peer-deps
       - name: Download pinned Apple Silicon native bundle
         run: npm run components:install -- darwin-arm64
-      - name: Verify native architecture and initialization
+      - name: Verify native architecture and dependencies
         run: |
           test "$(uname -m)" = arm64
           file resources/wcdb/macos/universal/*.dylib resources/wedecrypt/macos/arm64/*.node
           otool -L resources/wcdb/macos/universal/libwcdb_api.dylib
-          node -e 'const k=require("koffi"),p=require("path");k.load(p.resolve("resources/wcdb/macos/universal/libWCDB.dylib"));const l=k.load(p.resolve("resources/wcdb/macos/universal/libwcdb_api.dylib"));const code=l.func("int32 wcdb_init()")();console.log("Native init:",code);if(code!==0)process.exit(1);l.func("int32 wcdb_shutdown()")()'
       - name: Check types and build desktop application
         run: |
           npm version "5.0.0-macos-preview.${{ github.run_number }}" --no-git-tag-version --ignore-scripts

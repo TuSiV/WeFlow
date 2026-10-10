@@ -154,7 +154,8 @@ if (!process.versions.electron) {
   delete environment.ELECTRON_RUN_AS_NODE
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'weflow-native-'))
   environment.WEFLOW_NATIVE_TEST_TEMP = temporary
-  const child = spawnSync(require('electron'), [__filename], {
+  const host = process.platform === 'darwin' ? require('./prepare-macos-test-host.cjs')(temporary) : require('electron')
+  const child = spawnSync(host, [__filename], {
     env: environment, stdio: 'inherit', timeout: 180000
   })
   if (child.error) console.error(child.error)

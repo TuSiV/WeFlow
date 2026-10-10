@@ -138,7 +138,8 @@
         "resources/wcdb/.*",
         "resources/wedecrypt/.*"
       ],
-      "minimumSystemVersion": "15.0.0"
+      "minimumSystemVersion": "15.0.0",
+      "identity": "-"
     },
     "win": {
       "target": [
